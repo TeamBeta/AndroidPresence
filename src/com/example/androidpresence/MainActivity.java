@@ -2,6 +2,7 @@ package com.example.androidpresence;
 
 //import android.support.v7.app.ActionBarActivity;
 import com.example.androidpresence.adapter.TabsPagerAdapter;
+import com.example.androidpresence.sip.EditSIP;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -129,6 +130,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
    */
+    
+    public void editSIP(View view) {
+    	Intent intent = new Intent(getApplicationContext(), EditSIP.class);
+    	startActivity(intent);
+    }
  
     @Override
     public void onStart() {

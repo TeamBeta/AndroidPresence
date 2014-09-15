@@ -1,4 +1,7 @@
-package com.example.androidpresence;
+package com.example.androidpresence.sip;
+
+import com.example.androidpresence.R;
+import com.example.androidpresence.R.layout;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -12,9 +15,9 @@ public class EditSIP extends Activity{
 		super.onCreate(savedInstanceState);
 	    setContentView(R.layout.edit_sip); 
 	    
-	    username = (EditText)findViewById(R.id.editText1);
+	    /*username = (EditText)findViewById(R.id.editText1);
 	    password = (EditText)findViewById(R.id.editText2);
-	    login = (Button)findViewById(R.id.button1);
+	    login = (Button)findViewById(R.id.button1);*/
 	}
 	
 	
