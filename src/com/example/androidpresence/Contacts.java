@@ -1,24 +1,32 @@
 package com.example.androidpresence;
 
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
+import com.example.androidpresence.R;
+
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class Contacts extends Activity{
-
+public class Contacts extends Fragment {
 	private TextView headlineLabel = null;
+	
+	
+	@Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+ 
+        View rootView = inflater.inflate(R.layout.contacts, container, false);
+         
+        return rootView;
+    }
+	/*
+	private TextView username = null;
 	private TextView outputText = null;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -108,5 +116,5 @@ public class Contacts extends Activity{
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
+	}*/
 }
