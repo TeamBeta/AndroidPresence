@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,18 +18,18 @@ import android.widget.TextView;
 
 public class Contacts extends Activity{
 
-	private TextView username = null;
+	private TextView headlineLabel = null;
 	private TextView outputText = null;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-	    setContentView(R.layout.contacts); 
+	    setContentView(R.layout.contacts); //decide what layout to use
 	    
 	    // Get username from previous activity
-	    username = (TextView) findViewById(R.id.textView1);
+	    headlineLabel = (TextView) findViewById(R.id.textView1);
 	    Intent i = getIntent();
         String _username = i.getStringExtra("username");
-        username.setText("Logged in as "+_username);
+        headlineLabel.setText("Logged in as "+_username);
         outputText = (TextView) findViewById(R.id.textView2);
 
         //ContentValues personValues = new ContentValues();
@@ -55,13 +56,15 @@ public class Contacts extends Activity{
 		ContentResolver contentResolver = getContentResolver();
 		Cursor cursor = contentResolver.query(CONTENT_URI, null,null, null, null); 
 		
+		Log.d("JADA", "So FAR");
 		// Loop for every contact in the phone
 		if (cursor.getCount() > 0) {
 			while (cursor.moveToNext()) {
 				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
-				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));
-				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER )));
-				if (hasPhoneNumber > 0) {
+				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));				
+				Log.d("contactName", name);
+				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER ))); //get the boolean value of HasPhone and parse to int (0 == false, 1 == true)
+				if (hasPhoneNumber > 0) { //if user has phone number
 					output.append("\n First Name:" + name);
 					// Query and loop for every phone number of the contact
 					Cursor phoneCursor = contentResolver.query(PhoneCONTENT_URI, null, Phone_CONTACT_ID + " = ?", new String[] { contact_id }, null);

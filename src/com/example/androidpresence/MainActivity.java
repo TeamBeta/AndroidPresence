@@ -25,11 +25,11 @@ public class MainActivity extends Activity  {
 	}
 	
 	public void login(View view){
-		if(username.getText().toString().equals("admin") && password.getText().toString().equals("admin")){
-			Toast.makeText(getApplicationContext(), "Redirecting...", Toast.LENGTH_SHORT).show();
-			Intent i = new Intent(getApplicationContext(), Contacts.class);
-			i.putExtra("username", username.getText().toString());
-			startActivity(i);
+		if(username.getText().toString().equals("") && password.getText().toString().equals("")){
+			Toast.makeText(getApplicationContext(), "Logging in...", Toast.LENGTH_SHORT).show();
+			Intent i = new Intent(getApplicationContext(), Contacts.class); //setup change view/activity
+			i.putExtra("username", username.getText().toString()); //send values into new intent
+			startActivity(i); //execute change view
 		}	
 		else{
 			Toast.makeText(getApplicationContext(), "Wrong Password/Username",Toast.LENGTH_SHORT).show();
