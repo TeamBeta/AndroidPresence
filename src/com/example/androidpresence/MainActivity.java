@@ -1,29 +1,28 @@
 package com.example.androidpresence;
 
 //import android.support.v7.app.ActionBarActivity;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import com.example.androidpresence.adapter.ExpandableListAdapter;
 import com.example.androidpresence.adapter.TabsPagerAdapter;
 import com.example.androidpresence.sip.EditSIP;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
-import android.app.ActionBar.TabListener;
-import android.app.Activity;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.*;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
 
-@SuppressLint("NewApi")
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener  {
 	private ViewPager viewPager;
     private TabsPagerAdapter mAdapter;
@@ -31,9 +30,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     // Tab titles
     private String[] tabs = { "Accounts", "Contacts" };
 	
-	private EditText username = null;
-	private EditText password = null;
+    private ArrayList<String> parentItems = new ArrayList<String>();
+	private ArrayList<Object> childItems = new ArrayList<Object>();
+
 	private Button login;
+	
+	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -74,10 +76,85 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             public void onPageScrollStateChanged(int arg0) {
             }
         });
+        
 	    //username = (EditText)findViewById(R.id.editText1);
 	    //password = (EditText)findViewById(R.id.editText2);
 	    //login = (Button)findViewById(R.id.button1);
+        
+        
 	}
+	
+	
+	
+	
+	/*
+		// TODO Auto-generated method stub
+		contactName = (TextView) findViewById(R.id.contactName);
+		contactInfo = (TextView) findViewById(R.id.contactInfo);
+		
+		String phoneNumber = null;
+		String email = null;
+		 
+		Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;
+		String _ID = ContactsContract.Contacts._ID;
+		String DISPLAY_NAME = ContactsContract.Contacts.DISPLAY_NAME;
+		String HAS_PHONE_NUMBER = ContactsContract.Contacts.HAS_PHONE_NUMBER;
+		Uri PhoneCONTENT_URI = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+		String Phone_CONTACT_ID = ContactsContract.CommonDataKinds.Phone.CONTACT_ID;
+		String NUMBER = ContactsContract.CommonDataKinds.Phone.NUMBER;
+		Uri EmailCONTENT_URI =  ContactsContract.CommonDataKinds.Email.CONTENT_URI;
+		String EmailCONTACT_ID = ContactsContract.CommonDataKinds.Email.CONTACT_ID;
+		String DATA = ContactsContract.CommonDataKinds.Email.DATA;
+		StringBuffer output = new StringBuffer();
+		ContentResolver contentResolver = getContentResolver();
+		Cursor cursor = contentResolver.query(CONTENT_URI, null,null, null, null); 
+		
+		contactName.setText("yolo");
+		/*
+		Log.d("JADA", "So FAR");
+		// Loop for every contact in the phone
+		if (cursor.getCount() > 0) {
+			while (cursor.moveToNext()) {
+				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
+				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));				
+				Log.d("contactName", name);
+				contactName.setText(output);
+				
+				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER ))); //get the boolean value of HasPhone and parse to int (0 == false, 1 == true)
+				if (hasPhoneNumber > 0) { //if user has phone number
+					output.append("\n First Name:" + name);
+					// Query and loop for every phone number of the contact
+					Cursor phoneCursor = contentResolver.query(PhoneCONTENT_URI, null, Phone_CONTACT_ID + " = ?", new String[] { contact_id }, null);
+					while (phoneCursor.moveToNext()) {
+						phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(NUMBER));
+						output.append("\n Phone number:" + phoneNumber);
+					}
+					phoneCursor.close();
+					// Query and loop for every email of the contact
+					Cursor emailCursor = contentResolver.query(EmailCONTENT_URI,    null, EmailCONTACT_ID+ " = ?", new String[] { contact_id }, null);
+					while (emailCursor.moveToNext()) {
+						email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
+						output.append("\nEmail:" + email);
+					}
+					emailCursor.close();
+				}
+				output.append("\n");
+			}
+			
+		}	
+	}
+	
+	public void toggle_contents(View v){
+		if(contactInfo.isShown()){
+		    Fx.slide_up(this, contactInfo);
+		    contactInfo.setVisibility(View.GONE);
+		  }
+		  else{
+			  contactInfo.setVisibility(View.VISIBLE);
+		    Fx.slide_down(this, contactInfo);
+		  }
+	}
+	*/
 	
 	@Override
     public void onTabReselected(Tab tab, FragmentTransaction ft) {
