@@ -101,8 +101,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	
 	private void getContacts() {
-		String phoneNumber = null;
-		String email = null;
+		String phoneNumber;
+		String email;
 		 
 		Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;
 		String _ID = ContactsContract.Contacts._ID;
@@ -122,6 +122,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		if (cursor.getCount() > 0) {
 			while (cursor.moveToNext()) { //for every contact
 				ArrayList<String> emails = new ArrayList<String>();
+				ArrayList<String> phoneNumbers = new ArrayList<String>();
 				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
 				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));				
 				Log.d("contactName", name);
@@ -132,18 +133,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					Cursor phoneCursor = contentResolver.query(PhoneCONTENT_URI, null, Phone_CONTACT_ID + " = ?", new String[] { contact_id }, null);
 					while (phoneCursor.moveToNext()) {
 						phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(NUMBER));
-						output.append("\n Phone number:" + phoneNumber);
+						phoneNumbers.add(phoneNumber);
 					}
 					phoneCursor.close();
 					// Query and loop for every email of the contact
 					Cursor emailCursor = contentResolver.query(EmailCONTENT_URI,    null, EmailCONTACT_ID+ " = ?", new String[] { contact_id }, null);
 					while (emailCursor.moveToNext()) {
 						email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
-						output.append("\nEmail:" + email);
+						emails.add(email);
 					}
 					emailCursor.close();
 				}
-				Contact contact = new Contact(name,emails);
+				Contact contact = new Contact(name,emails, phoneNumbers);
 				listOfContacts.add(contact);
 			}
 			
