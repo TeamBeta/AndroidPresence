@@ -8,7 +8,7 @@ public class Contact {
 	ArrayList<String> emails;
 	ArrayList<String> phoneNumbers;
 	
-	public Contact(String contactName, ArrayList<String> emails, ArrayList<String> phonenNumbers) {
+	public Contact(String contactName, ArrayList<String> emails, ArrayList<String> phoneNumbers) {
 		this.contactName = contactName;
 		this.emails = emails;
 		this.phoneNumbers = phoneNumbers;
