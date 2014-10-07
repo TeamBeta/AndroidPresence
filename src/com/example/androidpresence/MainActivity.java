@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.example.androidpresence.adapter.ExpandableListAdapter;
+
 import com.example.androidpresence.adapter.TabsPagerAdapter;
 import com.example.androidpresence.sip.EditSIP;
 
@@ -14,7 +15,14 @@ import android.app.ActionBar.Tab;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.Profile;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -35,13 +43,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	private Button login;
 	
-	
+	ArrayList<Contact> listOfContacts;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 	    setContentView(R.layout.activity_main); 
 	    
+	    listOfContacts = new ArrayList<Contact>();
+        getContacts(); 
+		getOwnProfileInfo();
+	    	    
 	    viewPager = (ViewPager) findViewById(R.id.pager);
         actionBar = getActionBar();
         mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
@@ -87,11 +99,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	
 	
-	/*
-		// TODO Auto-generated method stub
-		contactName = (TextView) findViewById(R.id.contactName);
-		contactInfo = (TextView) findViewById(R.id.contactInfo);
-		
+	
+	private void getContacts() {
 		String phoneNumber = null;
 		String email = null;
 		 
@@ -108,18 +117,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		StringBuffer output = new StringBuffer();
 		ContentResolver contentResolver = getContentResolver();
 		Cursor cursor = contentResolver.query(CONTENT_URI, null,null, null, null); 
-		
-		contactName.setText("yolo");
-		/*
-		Log.d("JADA", "So FAR");
-		// Loop for every contact in the phone
+						
+		Log.d("JADA", "So FAR"); 
 		if (cursor.getCount() > 0) {
-			while (cursor.moveToNext()) {
+			while (cursor.moveToNext()) { //for every contact
+				ArrayList<String> emails = new ArrayList<String>();
 				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
 				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));				
 				Log.d("contactName", name);
-				contactName.setText(output);
-				
 				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER ))); //get the boolean value of HasPhone and parse to int (0 == false, 1 == true)
 				if (hasPhoneNumber > 0) { //if user has phone number
 					output.append("\n First Name:" + name);
@@ -138,26 +143,65 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					}
 					emailCursor.close();
 				}
-				output.append("\n");
+				Contact contact = new Contact(name,emails);
+				listOfContacts.add(contact);
 			}
 			
 		}	
 	}
 	
-	public void toggle_contents(View v){
-		if(contactInfo.isShown()){
-		    Fx.slide_up(this, contactInfo);
-		    contactInfo.setVisibility(View.GONE);
-		  }
-		  else{
-			  contactInfo.setVisibility(View.VISIBLE);
-		    Fx.slide_down(this, contactInfo);
-		  }
-	}
-	*/
+	public void getOwnProfileInfo() {
+		String USER_ID;
+		
+		String[] mProjection = new String[]  //projection are the columns to retrieve => makes the queries more efficient
+			    {
+			        Profile._ID,
+			        Profile.DISPLAY_NAME_PRIMARY,
+			        Profile.LOOKUP_KEY,
+			        Profile.PHOTO_THUMBNAIL_URI,
+			        Profile.CONTACT_PRESENCE
+			    };
+		
+			//THE COLUMNS IN THE PROFILE TABLE
+			String _ID = ContactsContract.Profile._ID;
+			String DISPLAY_NAME = ContactsContract.Profile.DISPLAY_NAME_PRIMARY;
+			String LOOKUP_KEY = ContactsContract.Profile.LOOKUP_KEY;
+			String PHOTO_THUMBNAIL_URI = ContactsContract.Profile.PHOTO_THUMBNAIL_URI;
+			String CONTACT_PRESENCE = ContactsContract.Profile.CONTACT_PRESENCE;
+			
+			//CONTENT URI FOR EMAIL
+			Uri EMAIL_CONTENT_URI = ContactsContract.CommonDataKinds.Email.CONTENT_URI;
+			String EMAIL_CONTACT_ID = ContactsContract.CommonDataKinds.Email.CONTACT_ID;
+			String EMAIL_DATA = ContactsContract.CommonDataKinds.Email.DATA;
+			//CONTENT URI FOR SIP
+			String SIP_ADDRESS = ContactsContract.CommonDataKinds.SipAddress.CONTACT_PRESENCE;
+			
+			// Retrieves the profile from the Contacts Provider
+			Cursor mProfileCursor =
+			        getContentResolver().query(
+			                Profile.CONTENT_URI,
+			                mProjection,         
+			                null,
+			                null,
+			                null);
+			if (mProfileCursor.moveToFirst()) // data?
+				Log.d("SO FAR","Sofar");	
+				USER_ID = mProfileCursor.getString(mProfileCursor.getColumnIndex(_ID)); 
+			mProfileCursor.close();
+			Cursor emailCursor = getContentResolver().query(EMAIL_CONTENT_URI, null, EMAIL_CONTACT_ID+ " = ?", new String[] { USER_ID }, null); //translated to SQL => where EmailContact_ID = 'USER_ID';
+			while (emailCursor.moveToNext()) { //for every email that uses has
+				String email = emailCursor.getString(emailCursor.getColumnIndex(EMAIL_DATA)); 
+				Log.d("USER EMAIL",email);
+			}
+			emailCursor.close();  
+	} 
+	
+	
+	
+	
 	
 	@Override
-    public void onTabReselected(Tab tab, FragmentTransaction ft) {
+    public void onTabReselected(Tab tab, FragmentTransaction ft) { 
     }
  
     @Override

@@ -29,17 +29,18 @@
     
     
     <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/sipPasswordHeadline"
             android:layout_width="wrap_content"
             android:layout_height="42dp"
-            android:text="Large Text"
+            android:text="Password"
             android:textAppearance="?android:attr/textAppearanceLarge" 
          	android:layout_marginLeft="10dp"
         	android:layout_marginStart="10dp"
+        	android:layout_marginTop="50dp"
             />
 
     <EditText
-        android:id="@+id/editText2"
+        android:id="@+id/sipPassword1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="22dp"
@@ -48,6 +49,17 @@
         android:layout_marginRight="10dp"
         android:layout_marginStart="10dp"
         android:ems="10"
-        android:inputType="text" />
+        android:inputType="textPassword" >
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/saveSIPInfo"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="127dp"
+        android:layout_height="wrap_content"
+        android:text="Save" 
+        android:layout_alignParentRight="true"/>
 
 </LinearLayout>
