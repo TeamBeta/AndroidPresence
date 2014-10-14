@@ -2,6 +2,9 @@ package com.example.androidpresence;
 
 //import android.support.v7.app.ActionBarActivity;
 import java.text.ParseException;
+
+import java.net.URI;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +39,7 @@ import org.linphone.core.LinphoneCore.RegistrationState;
 import org.linphone.core.PublishState;
 import org.linphone.core.SubscriptionState;
 
+import android.accounts.AccountManager;
 import android.app.ActionBar;
 import android.app.PendingIntent;
 import android.app.ActionBar.Tab;
@@ -51,10 +55,12 @@ import android.net.sip.SipException;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
 import android.net.sip.SipRegistrationListener;
+import android.net.sip.SipProfile;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.Profile;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
@@ -91,8 +97,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	private Button login;
 	
+    //CONTACT INFORMATION
 	public static ArrayList<Contact> listOfContacts;
-		
+	
+	//USER INFORMATION
+	public static String userName;
+	
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -142,16 +153,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	
-	
-
-	
-
-
-
-
-	
-
-
 
 
 
@@ -241,6 +242,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 
 	private void getContacts() {
+
 		String phoneNumber;
 		String email;
 		
@@ -254,7 +256,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Uri EmailCONTENT_URI =  ContactsContract.CommonDataKinds.Email.CONTENT_URI;
 		String EmailCONTACT_ID = ContactsContract.CommonDataKinds.Email.CONTACT_ID;
 		String DATA = ContactsContract.CommonDataKinds.Email.DATA;
-		StringBuffer output = new StringBuffer();
+		
+		String contact_status = ContactsContract.Contacts.CONTACT_STATUS;
+		String contact_presence = ContactsContract.Contacts.CONTACT_PRESENCE;
+		Uri presenceUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, Uri.encode("kristoffer.oseth@gmail.com"));
+		
+		
 		ContentResolver contentResolver = getContentResolver();
 		Cursor cursor = contentResolver.query(CONTENT_URI, null,null, null, null); 
 						
@@ -265,14 +272,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				ArrayList<String> phoneNumbers = new ArrayList<String>();
 				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
 				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));				
+								
 				Log.d("contactName", name);
 				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER ))); //get the boolean value of HasPhone and parse to int (0 == false, 1 == true)
 				if (hasPhoneNumber > 0) { //if user has phone number
-					output.append("\n First Name:" + name); 
+					//output.append("\n First Name:" + name); 
+
 					// Query and loop for every phone number of the contact
 					Cursor phoneCursor = contentResolver.query(PhoneCONTENT_URI, null, Phone_CONTACT_ID + " = ?", new String[] { contact_id }, null);
 					while (phoneCursor.moveToNext()) {
 						phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(NUMBER));
+						Log.d("contact Phone",phoneNumber);
 						phoneNumbers.add(phoneNumber);
 						Log.d("phone", phoneNumber);
 					}
@@ -281,15 +291,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					Cursor emailCursor = contentResolver.query(EmailCONTENT_URI,    null, EmailCONTACT_ID+ " = ?", new String[] { contact_id }, null);
 					while (emailCursor.moveToNext()) {
 						email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
+						Log.d("contact Email",email);
 						emails.add(email);
 						Log.d("email", email);
 					}
+
 					emailCursor.close();
 				}
 				Contact contact = new Contact(name,emails, phoneNumbers);
 				listOfContacts.add(contact);
+				Log.d("PRESENCE", ""+cursor.getInt(cursor.getColumnIndex(contact_presence)));
+				//Log.d("STATUS",cursor.getString(cursor.getColumnIndex(contact_status)));
 			}
-			
+			cursor.close();
 		}	
 	}
 	
@@ -302,7 +316,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			        Profile.DISPLAY_NAME_PRIMARY,
 			        Profile.LOOKUP_KEY,
 			        Profile.PHOTO_THUMBNAIL_URI,
-			        Profile.CONTACT_PRESENCE
+			        Profile.CONTACT_PRESENCE,
+			        //CommonDataKinds.SipAddress.CONTACT_PRESENCE
 			    };
 		
 			//THE COLUMNS IN THE PROFILE TABLE
@@ -318,27 +333,59 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			String EMAIL_DATA = ContactsContract.CommonDataKinds.Email.DATA;
 			//CONTENT URI FOR SIP
 			String SIP_ADDRESS = ContactsContract.CommonDataKinds.SipAddress.CONTACT_PRESENCE;
+			String SIP_CONTACT_ID = ContactsContract.CommonDataKinds.SipAddress.CONTACT_ID;
+			String DATA = ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS;
 			
 			// Retrieves the profile from the Contacts Provider
 			Cursor mProfileCursor =
 			        getContentResolver().query(
 			                Profile.CONTENT_URI,
-			                mProjection,         
+			                null,         
 			                null,
 			                null,
 			                null);
 			if (mProfileCursor.moveToFirst()) // data?
 				Log.d("SO FAR","Sofar");	
-				USER_ID = mProfileCursor.getString(mProfileCursor.getColumnIndex(_ID)); 
-			mProfileCursor.close();
-			Cursor emailCursor = getContentResolver().query(EMAIL_CONTENT_URI, null, EMAIL_CONTACT_ID+ " = ?", new String[] { USER_ID }, null); //translated to SQL => where EmailContact_ID = 'USER_ID';
-			while (emailCursor.moveToNext()) { //for every email that uses has
-				String email = emailCursor.getString(emailCursor.getColumnIndex(EMAIL_DATA)); 
-				Log.d("USER EMAIL",email);
+			    Log.d("User Name",mProfileCursor.getString(mProfileCursor.getColumnIndex(DISPLAY_NAME)));	
+				userName = mProfileCursor.getString(mProfileCursor.getColumnIndex(DISPLAY_NAME));
+			    USER_ID = mProfileCursor.getString(mProfileCursor.getColumnIndex(_ID)); 
+				//String sipa = mProfileCursor.getString(mProfileCursor.getColumnIndex(DATA));
+				Log.d("SIPPP",DATA);
+			    Cursor emailCursor = getContentResolver().query(EMAIL_CONTENT_URI, null, null, null, null); //translated to SQL => where EmailContact_ID = 'USER_ID';
+				while (emailCursor.moveToNext()) { //for every email that uses has
+					String email = emailCursor.getString(emailCursor.getColumnIndex(EMAIL_DATA)); 
+					Log.d("USER EMAIL",email);
+				}
+				emailCursor.close(); 
+				/*Cursor sipCursor = getContentResolver().query(Profile.CONTENT_URI, null, null, null, null); //translated to SQL => where EmailContact_ID = 'USER_ID';
+				while (sipCursor.moveToNext()) { //for every email that uses has
+					String sip = sipCursor.getString(sipCursor.getColumnIndex(DATA)); 
+					Log.d("USER SIP",sip);
+				}
+				sipCursor.close(); */ 
+			mProfileCursor.close();  
+			
+			Uri uri = ContactsContract.Data.CONTENT_URI;
+			String[] projection = new String[] {
+			    ContactsContract.Data._ID,
+			    ContactsContract.Data.DISPLAY_NAME,
+			    ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS,
+			    ContactsContract.CommonDataKinds.SipAddress.TYPE,
+			};
+			String selection = 
+			    ContactsContract.Data.MIMETYPE+" ='" 
+			    +ContactsContract.CommonDataKinds.SipAddress.CONTENT_ITEM_TYPE+"'";
+			String[] selectionArgs = null;
+			String sortOrder = ContactsContract.Contacts.DISPLAY_NAME+ " COLLATE LOCALIZED ASC";
+			Cursor cursor2 = getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder);
+			if (cursor2.moveToFirst()) {
+				String s = cursor2.getString(2);
+				Log.d("MONGO",s);
 			}
-			emailCursor.close();  
+			
+			
 	} 
-	
+	 
 	
 	
 	
