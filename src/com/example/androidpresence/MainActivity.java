@@ -5,6 +5,7 @@ import java.text.ParseException;
 
 import java.net.URI;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import org.linphone.core.LinphoneCore.RegistrationState;
 import org.linphone.core.PublishState;
 import org.linphone.core.SubscriptionState;
 
+
 import android.accounts.AccountManager;
 import android.app.ActionBar;
 import android.app.PendingIntent;
@@ -55,6 +57,7 @@ import android.net.sip.SipException;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
 import android.net.sip.SipRegistrationListener;
+
 import android.net.sip.SipProfile;
 import android.os.Build;
 import android.os.Bundle;
@@ -153,6 +156,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	
+
 
 
 
