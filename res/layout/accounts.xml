@@ -4,13 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#f2f2f2" >
-     
-    <TextView android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Accounts"
-        android:textSize="20dp"
-        android:layout_centerInParent="true"/>
 
     <Button
         android:id="@+id/sipButton"
@@ -18,9 +11,19 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="31dp"
-        android:text="SIP" 
-        android:onClick="editSIP"/>
+        android:layout_marginLeft="17dp"
+        android:layout_marginTop="54dp"
+        android:onClick="editSIP"
+        android:text="SIP" />
+
+    <TextView
+        android:id="@+id/nameLabel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:gravity="center"
+        android:text="nameLabel"
+        android:textSize="20dp" />
  
 </RelativeLayout>
