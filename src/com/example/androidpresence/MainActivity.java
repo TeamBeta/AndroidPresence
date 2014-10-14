@@ -1,6 +1,7 @@
 package com.example.androidpresence;
 
 //import android.support.v7.app.ActionBarActivity;
+
 import java.text.ParseException;
 
 import java.net.URI;
@@ -17,6 +18,7 @@ import com.portsip.PortSipSdk;
 import com.example.androidpresence.adapter.ExpandableListAdapter;
 import com.example.androidpresence.adapter.TabsPagerAdapter;
 import com.example.androidpresence.sip.EditSIP;
+
 
 import org.linphone.core.LinphoneAddress;
 import org.linphone.core.LinphoneCall;
@@ -41,6 +43,7 @@ import org.linphone.core.PublishState;
 import org.linphone.core.SubscriptionState;
 
 
+
 import android.accounts.AccountManager;
 import android.app.ActionBar;
 import android.app.PendingIntent;
@@ -53,10 +56,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+
 import android.net.sip.SipException;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
 import android.net.sip.SipRegistrationListener;
+
 
 import android.net.sip.SipProfile;
 import android.os.Build;
@@ -155,8 +160,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
       
 	}
 	
-	
-
 
 
 
@@ -297,8 +300,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 						email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
 						Log.d("contact Email",email);
 						emails.add(email);
+
 						Log.d("email", email);
 					}
+
 
 					emailCursor.close();
 				}
