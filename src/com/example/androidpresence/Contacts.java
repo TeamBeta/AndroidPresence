@@ -7,8 +7,11 @@ import java.util.List;
 import com.example.androidpresence.R;
 import com.example.androidpresence.adapter.ExpandableListAdapter;
 
+import android.net.sip.SipProfile;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,25 +19,28 @@ import android.widget.ExpandableListView;
 
 public class Contacts extends Fragment {
 	
+	
 	// Expandable list
 		private ExpandableListAdapter listAdapter;
 	    private ExpandableListView expListView;
-	    private List<String> listDataHeader;
-	    private HashMap<String, List<String>> listDataChild;
+	    private ArrayList<String> listContactNames;
+	    private HashMap<String, ArrayList<String>> listContactInformation;
 	    
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
- 
+		
         View rootView = inflater.inflate(R.layout.contacts, container, false);
          
+        
         // get the listview
         expListView = (ExpandableListView) rootView.findViewById(R.id.expandableList);
  
+        
         // preparing list data
         prepareListData(); 
  
-        listAdapter = new ExpandableListAdapter(this.getActivity(), listDataHeader, listDataChild);
+        listAdapter = new ExpandableListAdapter(this.getActivity(), listContactNames, listContactInformation);
         
  
         // setting list adapter
@@ -44,13 +50,39 @@ public class Contacts extends Fragment {
     }
 	
 	private void prepareListData() {
-        listDataHeader = new ArrayList<String>();
-        listDataChild = new HashMap<String, List<String>>();
- 
+		
+		listContactNames = new ArrayList<String>();
+		listContactInformation = new HashMap<String, ArrayList<String>>();
+		ArrayList<String> test = new ArrayList<String>();
+		test.add("hei");
+		test.add("på");
+		test.add("deg");
+		
+		ArrayList<Contact> contacts = MainActivity.listOfContacts;
+		for (int i = 0; i < contacts.size(); i++) {
+			Contact contact = contacts.get(i);
+			listContactNames.add(contact.contactName);
+			
+			ArrayList<String> emails = contact.getEmails();
+			ArrayList<String> phoneNumbers = contact.getPhoneNumbers();
+			
+			ArrayList<String> finalList = new ArrayList<String>();
+			
+			finalList.addAll(emails);
+			finalList.addAll(phoneNumbers);
+			
+			String s = ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS;
+			Log.d("sip", s);
+			
+			listContactInformation.put(listContactNames.get(i), finalList);
+		}
+		
+        
+ /*
         // Adding child data
-        listDataHeader.add("Top 250");
-        listDataHeader.add("Now Showing");
-        listDataHeader.add("Coming Soon..");
+		listContactNames.add("Top 250");
+		listContactNames.add("Now Showing");
+		listContactNames.add("Coming Soon..");
  
         // Adding child data 
         List<String> top250 = new ArrayList<String>();
@@ -77,9 +109,9 @@ public class Contacts extends Fragment {
         comingSoon.add("The Canyons");
         comingSoon.add("Europa Report");
  
-        listDataChild.put(listDataHeader.get(0), top250); // Header, Child data
-        listDataChild.put(listDataHeader.get(1), nowShowing);
-        listDataChild.put(listDataHeader.get(2), comingSoon);
+        listContactInformation.put(listContactNames.get(0), top250); // Header, Child data
+        listContactInformation.put(listContactNames.get(1), nowShowing);
+        listContactInformation.put(listContactNames.get(2), comingSoon);*/
     }
 	
 	/*

@@ -1,37 +1,85 @@
 package com.example.androidpresence;
 
 //import android.support.v7.app.ActionBarActivity;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.portsip.OnPortSIPEvent;
+import com.portsip.PortSipEnumDefine;
+import com.portsip.PortSipErrorcode;
+import com.portsip.PortSipSdk;
 import com.example.androidpresence.adapter.ExpandableListAdapter;
-
 import com.example.androidpresence.adapter.TabsPagerAdapter;
 import com.example.androidpresence.sip.EditSIP;
 
+import org.linphone.core.LinphoneAddress;
+import org.linphone.core.LinphoneCall;
+import org.linphone.core.LinphoneCallStats;
+import org.linphone.core.LinphoneChatMessage;
+import org.linphone.core.LinphoneChatRoom;
+import org.linphone.core.LinphoneContent;
+import org.linphone.core.LinphoneCore;
+import org.linphone.core.LinphoneCore.EcCalibratorStatus;
+import org.linphone.core.LinphoneCore.RemoteProvisioningState;
+import org.linphone.core.LinphoneCoreException;
+import org.linphone.core.LinphoneCoreFactory;
+import org.linphone.core.LinphoneCoreListener;
+import org.linphone.core.LinphoneEvent;
+import org.linphone.core.LinphoneFriend;
+import org.linphone.core.LinphoneInfoMessage;
+import org.linphone.core.LinphoneProxyConfig;
+import org.linphone.core.LinphoneCall.State;
+import org.linphone.core.LinphoneCore.GlobalState;
+import org.linphone.core.LinphoneCore.RegistrationState;
+import org.linphone.core.PublishState;
+import org.linphone.core.SubscriptionState;
+
 import android.app.ActionBar;
+import android.app.PendingIntent;
 import android.app.ActionBar.Tab;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.net.sip.SipException;
+import android.net.sip.SipManager;
+import android.net.sip.SipProfile;
+import android.net.sip.SipRegistrationListener;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Profile;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
+import android.util.Log; 
 import android.view.*;
 import android.widget.Button;
-import android.widget.ExpandableListView;
+import android.widget.ExpandableListView; 
 import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.TextView;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener  {
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
+	// SIP Variables
+	public String sipAddress = null;
+    public SipManager manager = null;
+    public SipProfile me = null;
+    public static final String MyPREFERENCES = "MyPrefs";
+    public static final String USERNAME = "usernameKey";
+    public static final String DOMAIN = "domainKey";
+    public static final String PASSWORD = "passwordKey";
+    SharedPreferences sharedpreferences;
+    private String SIPusername;
+    private String SIPdomain;
+    private String SIPpassword; 
+    // SIP Variables END
+    
 	private ViewPager viewPager;
     private TabsPagerAdapter mAdapter;
     private ActionBar actionBar;
@@ -43,12 +91,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	private Button login;
 	
-	ArrayList<Contact> listOfContacts;
-	
+	public static ArrayList<Contact> listOfContacts;
+		
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-	    setContentView(R.layout.activity_main); 
+	    setContentView(R.layout.activity_main);
+	    //initiateSIP();
 	    
 	    listOfContacts = new ArrayList<Contact>();
         getContacts(); 
@@ -89,22 +138,113 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             }
         });
         
-	    //username = (EditText)findViewById(R.id.editText1);
-	    //password = (EditText)findViewById(R.id.editText2);
-	    //login = (Button)findViewById(R.id.button1);
-        
-        
+      
 	}
 	
 	
 	
+
 	
+
+
+
+
 	
+
+
+
+
+
+
+
+
+
+	public void initiateSIP() {
+		Log.d("sip", "initiate sip");
+		if(manager == null) {
+			manager = SipManager.newInstance(this);
+	    }
+		if (manager == null) {
+            return; 
+        }
+
+        if (me != null) {
+        	if (manager == null) {
+                return;
+            }
+            try {
+                if (me != null) {
+                    manager.close(me.getUriString());
+                }
+            } catch (Exception ee) {
+                Log.d("WalkieTalkieActivity/onDestroy", "Failed to close local profile.", ee);
+            } 
+        }
+        
+        sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+        
+        if (sharedpreferences.contains(USERNAME)){
+	    	SIPusername = sharedpreferences.getString(USERNAME, "");
+	    }
+	    if (sharedpreferences.contains(DOMAIN)){
+	    	SIPdomain = sharedpreferences.getString(DOMAIN, "");
+	    }
+	    if (sharedpreferences.contains(PASSWORD)){
+	    	SIPpassword = sharedpreferences.getString(PASSWORD, "");
+	    }
+	    
+	    try {
+            SipProfile.Builder builder = new SipProfile.Builder(SIPusername, SIPdomain);
+            builder.setPassword(SIPpassword);
+            //builder.setProtocol("UDP");
+            me = builder.build();
+
+            Intent i = new Intent();
+            i.setAction("android.SipDemo.INCOMING_CALL");
+            PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, Intent.FILL_IN_DATA);
+            manager.open(me, pi, null);
+
+            Log.d("sip", SIPusername);
+            Log.d("sip", SIPdomain); 
+            Log.d("sip", SIPpassword); 
+
+            // This listener must be added AFTER manager.open is called,
+            // Otherwise the methods aren't guaranteed to fire.
+ 
+            manager.setRegistrationListener(me.getUriString(), new SipRegistrationListener() {
+                    public void onRegistering(String localProfileUri) {
+                        Log.d("sip","Registering with SIP Server...");
+                        
+                    }
+
+                    public void onRegistrationDone(String localProfileUri, long expiryTime) {
+                    	Log.d("sip","Registration Success");
+                    }
+
+                    public void onRegistrationFailed(String localProfileUri, int errorCode,
+                            String errorMessage) {
+                    	Log.e(""+errorCode,errorMessage);
+                    	Log.e("yo",localProfileUri);
+                    	Log.d("sip","Registering Failed");
+                    }
+                });
+        } catch (ParseException pe) {
+        	Log.d("sip","Connection error");
+        } catch (SipException se) {
+        	Log.d("sip","Connection error"); 
+        }
+		
+	}
+
+
+
+
+
 	private void getContacts() {
 		String phoneNumber;
 		String email;
-		 
-		Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;
+		
+		Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;		
 		String _ID = ContactsContract.Contacts._ID;
 		String DISPLAY_NAME = ContactsContract.Contacts.DISPLAY_NAME;
 		String HAS_PHONE_NUMBER = ContactsContract.Contacts.HAS_PHONE_NUMBER;
@@ -128,12 +268,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				Log.d("contactName", name);
 				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER ))); //get the boolean value of HasPhone and parse to int (0 == false, 1 == true)
 				if (hasPhoneNumber > 0) { //if user has phone number
-					output.append("\n First Name:" + name);
+					output.append("\n First Name:" + name); 
 					// Query and loop for every phone number of the contact
 					Cursor phoneCursor = contentResolver.query(PhoneCONTENT_URI, null, Phone_CONTACT_ID + " = ?", new String[] { contact_id }, null);
 					while (phoneCursor.moveToNext()) {
 						phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(NUMBER));
 						phoneNumbers.add(phoneNumber);
+						Log.d("phone", phoneNumber);
 					}
 					phoneCursor.close();
 					// Query and loop for every email of the contact
@@ -141,6 +282,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					while (emailCursor.moveToNext()) {
 						email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
 						emails.add(email);
+						Log.d("email", email);
 					}
 					emailCursor.close();
 				}
@@ -267,6 +409,29 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     public void onDestroy() {
         super.onDestroy();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	
 

@@ -1123,7 +1123,6 @@ containing a value of this type.
         public static final int progress_circular=0x7f050018;
         public static final int progress_horizontal=0x7f050019;
         public static final int radio=0x7f05002f;
-        public static final int saveSIPInfo=0x7f050043;
         public static final int search_badge=0x7f050032;
         public static final int search_bar=0x7f050031;
         public static final int search_button=0x7f050033;
@@ -1138,11 +1137,12 @@ containing a value of this type.
         public static final int showCustom=0x7f050007;
         public static final int showHome=0x7f050004;
         public static final int showTitle=0x7f050006;
-        public static final int sipAddressHeadline=0x7f05003f;
-        public static final int sipAddressValue=0x7f050040;
         public static final int sipButton=0x7f05003c;
-        public static final int sipPassword1=0x7f050042;
-        public static final int sipPasswordHeadline=0x7f050041;
+        public static final int sipDomain=0x7f050040;
+        public static final int sipLoading=0x7f050043;
+        public static final int sipPassword=0x7f050041;
+        public static final int sipSave=0x7f050042;
+        public static final int sipUsername=0x7f05003f;
         public static final int split_action_bar=0x7f05001e;
         public static final int submit_area=0x7f050039;
         public static final int tabMode=0x7f050002;

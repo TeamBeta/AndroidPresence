@@ -3,63 +3,128 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-    
-    <TextView
-            android:id="@+id/sipAddressHeadline"
-            android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:text="SIP Address:"
-            android:textAppearance="?android:attr/textAppearanceLarge" 
-         	android:layout_marginLeft="10dp"
-        	android:layout_marginStart="10dp"
-            />
-    
-    
-    <TextView
-            android:id="@+id/sipAddressValue"
-            android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:text="SIP Address"
-            android:textAppearance="?android:attr/textAppearanceLarge" 
-         	android:layout_marginLeft="10dp"
-        	android:layout_marginStart="10dp"
-            />
-    
-    
-    
-    
-    <TextView
-            android:id="@+id/sipPasswordHeadline"
-            android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:text="Password"
-            android:textAppearance="?android:attr/textAppearanceLarge" 
-         	android:layout_marginLeft="10dp"
-        	android:layout_marginStart="10dp"
-        	android:layout_marginTop="50dp"
-            />
 
-    <EditText
-        android:id="@+id/sipPassword1"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="22dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginStart="10dp"
-        android:ems="10"
-        android:inputType="textPassword" >
+        android:layout_height="50dp"
+        android:background="#cccccc"
+        android:orientation="vertical" >
 
-        <requestFocus />
-    </EditText>
+        <TextView
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:textSize="20dp"
+            android:text="Username" />
 
-    <Button
-        android:id="@+id/saveSIPInfo"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="127dp"
-        android:layout_height="wrap_content"
-        android:text="Save" 
-        android:layout_alignParentRight="true"/>
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <EditText
+	        android:id="@+id/sipUsername"
+	        android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+	        android:ems="10" >
+		<requestFocus />
+	    </EditText>
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#cccccc"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:textSize="20dp"
+            android:text="Domain" />
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <EditText
+	        android:id="@+id/sipDomain"
+	        android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+	        android:ems="10" >
+	    </EditText>
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#cccccc"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:textSize="20dp"
+            android:text="Password" />
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <EditText
+	        android:id="@+id/sipPassword"
+	        android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+	        android:ems="10"
+	        android:inputType="textPassword"  >
+	    </EditText>
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/sipSave"
+            android:layout_marginTop="10dp"
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:background="#66CCFF"
+            android:text="Save" />
+
+    </LinearLayout>
+    
+     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+         <TextView
+             android:id="@+id/sipLoading"
+             android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+             android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    </LinearLayout>
+
 
 </LinearLayout>
