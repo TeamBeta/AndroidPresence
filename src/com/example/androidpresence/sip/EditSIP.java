@@ -1,28 +1,22 @@
 package com.example.androidpresence.sip;
 
-import com.example.androidpresence.MainActivity;
-import com.example.androidpresence.R;
-import com.example.androidpresence.R.layout;
-
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.res.Resources;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.androidpresence.MainActivity;
+import com.example.androidpresence.R;
 
 public class EditSIP extends Activity{
 

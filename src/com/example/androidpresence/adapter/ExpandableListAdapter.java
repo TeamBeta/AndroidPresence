@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.example.androidpresence.R;
-
 import android.content.Context;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
@@ -13,6 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
+
+import com.example.androidpresence.R;
  
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
  
@@ -32,6 +32,11 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     public Object getChild(int groupPosition, int childPosititon) {
         return this._listDataChild.get(this._listDataHeader.get(groupPosition))
                 .get(childPosititon);
+    }
+    
+    public void update(ArrayList<String> _GroupStrings, HashMap<String, ArrayList<String>> _ChildStrings){
+    	_listDataHeader =  (ArrayList<String>) _GroupStrings;
+    	_listDataChild =  (HashMap<String, ArrayList<String>>) _ChildStrings;
     }
  
     @Override

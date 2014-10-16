@@ -2,84 +2,55 @@ package com.example.androidpresence;
 
 //import android.support.v7.app.ActionBarActivity;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.text.ParseException;
-
-import java.net.URI;
-
-
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collection;
 
-import com.portsip.OnPortSIPEvent;
-import com.portsip.PortSipEnumDefine;
-import com.portsip.PortSipErrorcode;
-import com.portsip.PortSipSdk;
-import com.example.androidpresence.adapter.ExpandableListAdapter;
-import com.example.androidpresence.adapter.TabsPagerAdapter;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.SmackAndroid;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Presence;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.example.androidpresence.sip.EditSIP;
 
-
-import org.linphone.core.LinphoneAddress;
-import org.linphone.core.LinphoneCall;
-import org.linphone.core.LinphoneCallStats;
-import org.linphone.core.LinphoneChatMessage;
-import org.linphone.core.LinphoneChatRoom;
-import org.linphone.core.LinphoneContent;
-import org.linphone.core.LinphoneCore;
-import org.linphone.core.LinphoneCore.EcCalibratorStatus;
-import org.linphone.core.LinphoneCore.RemoteProvisioningState;
-import org.linphone.core.LinphoneCoreException;
-import org.linphone.core.LinphoneCoreFactory;
-import org.linphone.core.LinphoneCoreListener;
-import org.linphone.core.LinphoneEvent;
-import org.linphone.core.LinphoneFriend;
-import org.linphone.core.LinphoneInfoMessage;
-import org.linphone.core.LinphoneProxyConfig;
-import org.linphone.core.LinphoneCall.State;
-import org.linphone.core.LinphoneCore.GlobalState;
-import org.linphone.core.LinphoneCore.RegistrationState;
-import org.linphone.core.PublishState;
-import org.linphone.core.SubscriptionState;
-
-
-
-import android.accounts.AccountManager;
-import android.app.ActionBar;
+import android.app.Activity;
 import android.app.PendingIntent;
-import android.app.ActionBar.Tab;
-import android.app.FragmentTransaction;
-import android.content.Context;
-import android.content.Intent;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-
 import android.net.sip.SipException;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
 import android.net.sip.SipRegistrationListener;
-
-
-import android.net.sip.SipProfile;
-import android.os.Build;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.ContactsContract;
-import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.Profile;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.ViewPager;
-import android.util.Log; 
-import android.view.*;
-import android.widget.Button;
-import android.widget.ExpandableListView; 
-import android.widget.ExpandableListView.OnChildClickListener;
-import android.widget.TextView;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
+public class MainActivity extends Activity {
 	// SIP Variables
 	public String sipAddress = null;
     public SipManager manager = null;
@@ -92,88 +63,92 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     private String SIPusername;
     private String SIPdomain;
     private String SIPpassword; 
+	private AsyncTask<Void, Void, Void> googleTask;
+	private AsyncTask<Void, Void, Void> facebookTask;
+	public AsyncTask<Void, Void, Void> httpTask;
+	private XMPPConnection googleConnection;
+	private XMPPConnection facebookConnection;
+	public static String pw = "";
+	public static String pw2 = "";
     // SIP Variables END
-    
-	private ViewPager viewPager;
-    private TabsPagerAdapter mAdapter;
-    private ActionBar actionBar;
-    // Tab titles
-    private String[] tabs = { "Accounts", "Contacts" };
-	
-    private ArrayList<String> parentItems = new ArrayList<String>();
-	private ArrayList<Object> childItems = new ArrayList<Object>();
-
-	private Button login;
-	
-    //CONTACT INFORMATION
-	public static ArrayList<Contact> listOfContacts;
 	
 	//USER INFORMATION
 	public static String userName;
+	Context context;
 	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 	    setContentView(R.layout.activity_main);
+	    context = this; 
+	    
 	    //initiateSIP();
-	    
-	    listOfContacts = new ArrayList<Contact>();
-        getContacts(); 
-		getOwnProfileInfo();
-	    	    
-	    viewPager = (ViewPager) findViewById(R.id.pager);
-        actionBar = getActionBar();
-        mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
- 
-        viewPager.setAdapter(mAdapter);
-        actionBar.setHomeButtonEnabled(false);
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);        
- 
-        // Adding Tabs
-        for (String tab_name : tabs) {
-            actionBar.addTab(actionBar.newTab().setText(tab_name)
-                    .setTabListener(this));
-        }
-	    
-        /**
-         * on swiping the viewpager make respective tab selected
-         * */
-        viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-         
-            @Override
-            public void onPageSelected(int position) {
-                // on changing the page
-                // make respected tab selected
-                actionBar.setSelectedNavigationItem(position);
-            }
-         
-            @Override
-            public void onPageScrolled(int arg0, float arg1, int arg2) {
-            }
-         
-            @Override
-            public void onPageScrollStateChanged(int arg0) {
-            }
-        });
-        
-      
+	    if (!Global.contactsHaveBeenInit) {
+	        Global.listOfGlobalContacts = new ArrayList<Contact>();
+	        getContacts(); 
+			getOwnProfileInfo();
+			Global.contactsHaveBeenInit = true;
+	    }
+	   
+        googleTask = new GoogleConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+        facebookTask = new FacebookConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
 	}
+	 
 	
-
-
-
-
-
-
-
+	
+	private class HTTPConnectionAction extends AsyncTask<Void,Void,Void> {
+		@Override
+		protected Void doInBackground(Void... params) { 
+	    	//ArrayList<String> mongo = new ArrayList<String>();
+	    	//mongo.add("simon.hordvik");
+	    	//mongo.add("oeseth");
+	    	for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
+	    		if (Global.listOfGlobalContacts.get(i).getFacebookUserName() == null) continue;  //if user doesn't have facebook address, skip
+	    		StringBuilder builder = new StringBuilder();
+		    	HttpClient client = new DefaultHttpClient();
+	    		Log.d("AAAAH",Global.listOfGlobalContacts.get(i).getFacebookUserName());
+	    		HttpGet httpGet = new HttpGet("http://graph.facebook.com/"+Global.listOfGlobalContacts.get(i).getFacebookUserName());
+		    	try{
+		    		HttpResponse response = client.execute(httpGet);
+		    		StatusLine statusLine = response.getStatusLine();
+		    		int statusCode = statusLine.getStatusCode();
+		    		if(statusCode == 200){
+		    			HttpEntity entity = response.getEntity();
+		    			InputStream content = entity.getContent();
+		    			BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+		    			String line;
+		    			while((line = reader.readLine()) != null){
+		    				builder.append(line);
+		    			}
+		    		} else {
+		    			Log.e(MainActivity.class.toString(),"Failedet JSON object");
+		    		}
+		    	}catch(ClientProtocolException e){
+		    		e.printStackTrace();
+		    	} catch (IOException e){
+		    		e.printStackTrace();
+		    	}
+		    	String readJSON = builder.toString();
+		    	try{
+		        	JSONObject jsonObject = new JSONObject(readJSON);
+		        	Log.d("TROROOR", jsonObject.getString("id"));
+		        	Global.listOfGlobalContacts.get(i).setFacebookUserId(jsonObject.getString("id"));
+		        } catch(Exception e){Log.d("Exception",""+e);}
+			}
+	    	this.cancel(true); //This terminates the async thread. Might have to be placed elsewhere..?
+			return null;
+		}
+	} 
+	
 	public void initiateSIP() {
 		Log.d("sip", "initiate sip");
 		if(manager == null) {
 			manager = SipManager.newInstance(this);
 	    }
 		if (manager == null) {
-            return; 
+            return;  
         }
 
         if (me != null) {
@@ -249,71 +224,67 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 
 	private void getContacts() {
-
-		String phoneNumber;
 		String email;
 		
 		Uri CONTENT_URI = ContactsContract.Contacts.CONTENT_URI;		
 		String _ID = ContactsContract.Contacts._ID;
 		String DISPLAY_NAME = ContactsContract.Contacts.DISPLAY_NAME;
-		String HAS_PHONE_NUMBER = ContactsContract.Contacts.HAS_PHONE_NUMBER;
-		Uri PhoneCONTENT_URI = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-		String Phone_CONTACT_ID = ContactsContract.CommonDataKinds.Phone.CONTACT_ID;
-		String NUMBER = ContactsContract.CommonDataKinds.Phone.NUMBER;
+		
 		Uri EmailCONTENT_URI =  ContactsContract.CommonDataKinds.Email.CONTENT_URI;
 		String EmailCONTACT_ID = ContactsContract.CommonDataKinds.Email.CONTACT_ID;
 		String DATA = ContactsContract.CommonDataKinds.Email.DATA;
-		
-		String contact_status = ContactsContract.Contacts.CONTACT_STATUS;
-		String contact_presence = ContactsContract.Contacts.CONTACT_PRESENCE;
-		Uri presenceUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, Uri.encode("kristoffer.oseth@gmail.com"));
-		
-		
+				
 		ContentResolver contentResolver = getContentResolver();
 		Cursor cursor = contentResolver.query(CONTENT_URI, null,null, null, null); 
 						
 		Log.d("JADA", "So FAR"); 
 		if (cursor.getCount() > 0) {
 			while (cursor.moveToNext()) { //for every contact
+				String gmail = null;
+				String facebookUserName = null;
 				ArrayList<String> emails = new ArrayList<String>();
 				ArrayList<String> phoneNumbers = new ArrayList<String>();
 				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
 				String name = cursor.getString(cursor.getColumnIndex( DISPLAY_NAME ));				
 								
 				Log.d("contactName", name);
-				int hasPhoneNumber = Integer.parseInt(cursor.getString(cursor.getColumnIndex( HAS_PHONE_NUMBER ))); //get the boolean value of HasPhone and parse to int (0 == false, 1 == true)
-				if (hasPhoneNumber > 0) { //if user has phone number
-					//output.append("\n First Name:" + name); 
-
-					// Query and loop for every phone number of the contact
-					Cursor phoneCursor = contentResolver.query(PhoneCONTENT_URI, null, Phone_CONTACT_ID + " = ?", new String[] { contact_id }, null);
-					while (phoneCursor.moveToNext()) {
-						phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(NUMBER));
-						Log.d("contact Phone",phoneNumber);
-						phoneNumbers.add(phoneNumber);
-						Log.d("phone", phoneNumber);
-					}
-					phoneCursor.close();
-					// Query and loop for every email of the contact
-					Cursor emailCursor = contentResolver.query(EmailCONTENT_URI,    null, EmailCONTACT_ID+ " = ?", new String[] { contact_id }, null);
-					while (emailCursor.moveToNext()) {
-						email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
-						Log.d("contact Email",email);
-						emails.add(email);
-
-						Log.d("email", email);
-					}
-
-
-					emailCursor.close();
+				// Query and loop for every email of the contact
+				Cursor emailCursor = contentResolver.query(EmailCONTENT_URI,    null, EmailCONTACT_ID+ " = ?", new String[] { contact_id }, null);
+				while (emailCursor.moveToNext()) {
+					email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
+					Log.d("contact Email",email);
+					emails.add(email);
+					gmail = email;
+					Log.d("email", email);
 				}
-				Contact contact = new Contact(name,emails, phoneNumbers);
-				listOfContacts.add(contact);
-				Log.d("PRESENCE", ""+cursor.getInt(cursor.getColumnIndex(contact_presence)));
-				//Log.d("STATUS",cursor.getString(cursor.getColumnIndex(contact_status)));
+				emailCursor.close();
+				String imWhere = ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?"; 
+			 	String[] imWhereParams = new String[]{contact_id, 
+			 	    ContactsContract.CommonDataKinds.Im.CONTENT_ITEM_TYPE}; 
+			 	Cursor imCursor = contentResolver.query(ContactsContract.Data.CONTENT_URI, 
+			 			null, imWhere, imWhereParams, null); 
+			 	while (imCursor.moveToNext()) { 
+			 		String imName = imCursor.getString(
+			 				imCursor.getColumnIndex(ContactsContract.CommonDataKinds.Im.DATA));
+			 		String imType;
+				 	imType = imCursor.getString(
+				 			imCursor.getColumnIndex(ContactsContract.CommonDataKinds.Im.TYPE));
+				 	String serviceName = imCursor.getString(
+				 			imCursor.getColumnIndex(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL));
+				 	Log.d("IMCURSOR", "Name: "+imName+", Type: "+imType+", Service: "+serviceName); 
+				 	if (serviceName != null && serviceName.toLowerCase().equals("facebook")) {
+				 		facebookUserName = imName;
+				 	    //get facebook user id
+				 	    //Facebook fb = new Session//Facebook("912136795486691");
+				 	}
+			 	} 
+			 	imCursor.close(); 
+				Contact contact = new Contact(name,emails, phoneNumbers, gmail, facebookUserName);
+				Global.listOfGlobalContacts.add(contact);
 			}
 			cursor.close();
 		}	
+		httpTask = new HTTPConnectionAction().execute(); //run async thead that retrieves the contact's respective facebook ids
 	}
 	
 	public void getOwnProfileInfo() {
@@ -397,98 +368,244 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 
 	
 	
-	
-	
-	@Override
-    public void onTabReselected(Tab tab, FragmentTransaction ft) { 
-    }
- 
-    @Override
-    public void onTabSelected(Tab tab, FragmentTransaction ft) {
-        // on tab selected
-        // show respected fragment view
-        viewPager.setCurrentItem(tab.getPosition());
-    }
- 
-    @Override
-    public void onTabUnselected(Tab tab, FragmentTransaction ft) {
-    }
-    
-    
-	
-    /*
-	public void login(View view){
-		if(username.getText().toString().equals("") && password.getText().toString().equals("")){
-			Toast.makeText(getApplicationContext(), "Logging in...", Toast.LENGTH_SHORT).show();
-			Intent i = new Intent(getApplicationContext(), Contacts.class); //setup change view/activity
-			i.putExtra("username", username.getText().toString()); //send values into new intent
-			startActivity(i); //execute change view
-		}	
-		else{
-			Toast.makeText(getApplicationContext(), "Wrong Password/Username",Toast.LENGTH_SHORT).show();
-		}
-	}	
-	   
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
+	private class GoogleConnectionAction extends AsyncTask<Void,Void,Void> {
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		@Override
+		protected Void doInBackground(Void... params) {
+			SmackAndroid.init(context);
+			Log.d("OnCreate", "InsideAsyncThread");
+			 ConnectionConfiguration config = new ConnectionConfiguration("talk.google.com", 5222,"gmail.com");
+		     googleConnection = new XMPPConnection(config); 
+		        try   
+		        {
+		        	Log.d("OnCreate", "ConnectionAttempt");
+		            googleConnection.connect();		 										//Establish connection
+		            Log.d("SUCCSEESSSSS", "JADA"); 
+		            try {
+			            googleConnection.login("simon.hordvik@gmail.com", pw);		//Login
+			            Log.d("Login", "success");			         
+			            //ATTEMPT TO GET ROSTER OF USERS THAT YOU CHAT WITH AND THEIR STATUSES
+			            Roster roster = googleConnection.getRoster();
+			            
+			            roster.addRosterListener(new RosterListener() { 
+							
+							@Override
+							public void presenceChanged(Presence arg0) {
+								String status = arg0.getType().name();
+								String[] pregmailAddress = arg0.getFrom().split("/");
+								String gmailAddress = pregmailAddress[0];
+								//Presence pre = roster.getPresence(user);
+								Log.d("CATO",gmailAddress+": "+status);
+								
+								//gå gjennom alle android contacts og sjekk om en gmail adresse stemmer
+								//if so, oppdater denne kontaktens presence
+								for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
+									if (gmailAddress.toLowerCase().equals(Global.listOfGlobalContacts.get(i).emails.get(0))) {
+										Log.d("MATCHING!!!",gmailAddress+" = "+Global.listOfGlobalContacts.get(i).emails.get(0));
+										Global.listOfGlobalContacts.get(i).setGmailPresence(status);
+										Log.d("FITTE", Global.listOfGlobalContacts.get(i).getGmail()+": "+Global.listOfGlobalContacts.get(i).getGmailPresence()+"-- Should be: "+status);
+									}
+								}
+								 
+								Log.d("HELLO","HELLO"); 
+								// UPDATE CONTACTS FRAGMENT
+								
+								
+								//Contacts.refreshList();
+								 //prepareListData(); 
+								// listAdapter.notifyDataSetChanged();
+								
+								Log.d("yoyo","yoyo");
+						        /*
+						         
+						        // get the listview
+								ExpandableListView view = Contacts.getExpView();
+						        // preparing list data
+						        Contacts.prepareListData(); 
+						 
+						        Contacts.listAdapter = new ExpandableListAdapter(context, Contacts.listContactNames, Contacts.listContactInformation);
+						        
+						 
+						        // setting list adapter
+						        view.setAdapter(Contacts.listAdapter);
+						         
+						        Contacts.getRootView();*/
+							} 
+							
+							@Override
+							public void entriesUpdated(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+								
+							} 
+							
+							@Override
+							public void entriesDeleted(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+							@Override 
+							public void entriesAdded(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+								
+							} 
+						});
+			            /* GET CONTACTS PRESENCE INFORMATION ONCE:
+			            Collection<RosterEntry> entries = roster.getEntries();
+			            for (RosterEntry entry : entries) {
+			            	//example: get presence, type, mode, status
+			            	Presence entryPresence = roster.getPresence(entry.getUser());
+			            	  //Presence.Type userType = entryPresence.getType();
+			            	  //Presence.Mode mode = entryPresence.getMode();
+			            	  //String status = entryPresence.getStatus(); 
+			            	  Log.d("ID",""+entry.toString());			               	  
+			            	  Log.d("User",""+entry.getUser());    
+			            	  Log.d("USERNAME",""+entry.getName());
+			            	  //Log.d("Name", entry.getName());                          //works in FB, not gmail
+			            	  //Log.d("Status", ""+entry.getStatus());					//works in FB, not gmail
+			            	  //Log.d("PRESENCESTATUS",""+entryPresence.getStatus()); 	//works in FB, not gmail
+			            	  Log.d("PRESENCETYPE", ""+entryPresence.getType().name());		//works in FB, not in gmail??
+			            	  Log.d("HOI", ""+entryPresence); 
+			            	  //Mode m = entryPresence.getMode(); 
+			            	  //Log.d("MODE",""+entryPresence.toString());
+			            }  */
+			           
+			            
+			            /*Presence presence = new Presence(Presence.Type.unavailable);		//Update your presence status
+			            try {
+				            connection.sendPacket(presence);
+ 
+				            Log.d("PresenceUpdate","success"); 
+						} catch (Exception e) {
+							Log.d("PresenceUpdate", "failed");
+						}*/
+					} catch (Exception e) {
+						Log.d("Login", "failed");
+						this.cancel(true); //attempt to terminate this async thread
+					}
+		        }
+		        catch (Exception ex)
+		        {
+		        	Log.d("FAILURE", "XMPPConnection");
+		        	this.cancel(true); //attempt to terminate this async thread 
+		            googleConnection = null;
+		        }
+			return null;
 		}
-		return super.onOptionsItemSelected(item);
+		
 	}
-
-   */
+	
+	private class FacebookConnectionAction extends AsyncTask<Void,Void,Void> {
+		@Override
+		protected Void doInBackground(Void... params) {
+			SmackAndroid.init(context);
+			Log.d("OnCreate", "InsideAsyncThread");
+			 ConnectionConfiguration config = new ConnectionConfiguration("chat.facebook.com", 5222);
+		     facebookConnection = new XMPPConnection(config); 
+		        try   
+		        {
+		        	Log.d("OnCreate", "ConnectionAttempt");
+		            facebookConnection.connect();		 										//Establish connection
+		            Log.d("SUCCSEESSSSS-FACEBOOK", "JADA"); 
+		            try {
+			            facebookConnection.login("simon.hordvik@gmail.com", pw2);		//Login
+			            Log.d("LoginFacebook", "success");			         
+			            //ATTEMPT TO GET ROSTER OF USERS THAT YOU CHAT WITH AND THEIR STATUSES
+			            Roster roster = facebookConnection.getRoster();
+			            
+			            roster.addRosterListener(new RosterListener() {
+							
+							@Override
+							public void presenceChanged(Presence arg0) {
+								String status = arg0.getType().name();
+								String[] prefacebookAddress = arg0.getFrom().split("@");
+								String facebookAddress = prefacebookAddress[0].substring(1); //remove the '-' sign placed in front of ID
+								//Presence pre = roster.getPresence(user);
+								Log.d("CATO",facebookAddress+": "+status);
+								
+								//gå gjennom alle android contacts og sjekk om en gmail adresse stemmer
+								//if so, oppdater denne kontaktens presence
+								for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
+									if (facebookAddress.equals(Global.listOfGlobalContacts.get(i).getFacebookUserId())) {
+										Log.d("MATCHING!!!-face",facebookAddress+" = "+Global.listOfGlobalContacts.get(i).getFacebookUserId()+"--->"+Global.listOfGlobalContacts.get(i).getFacebookUserName());
+										Global.listOfGlobalContacts.get(i).setFacebookPresence(status);
+										Log.d("FITTE_face", Global.listOfGlobalContacts.get(i).getFacebookUserName()+": "+Global.listOfGlobalContacts.get(i).getFacebookPresence()+"-- Should be: "+status);
+									} 
+								}
+							}  
+							
+							@Override
+							public void entriesUpdated(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+							} 
+							
+							@Override
+							public void entriesDeleted(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+							}
+							
+							@Override 
+							public void entriesAdded(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+							} 
+						});
+			            
+					} catch (Exception e) {
+						Log.d("LoginFacebook", "failed");
+						this.cancel(true); //attempt to terminate this async thread
+					}
+		        }
+		        catch (Exception ex)
+		        {
+		        	Log.d("FAILURE-FACEBOOK", "XMPPConnection");
+		        	this.cancel(true); //attempt to terminate this async thread 
+		            facebookConnection = null;
+		        }
+			return null;
+		}
+		
+	}
+	
     
     public void editSIP(View view) {
     	Intent intent = new Intent(getApplicationContext(), EditSIP.class);
     	startActivity(intent);
     }
+    
+    public void getContacts(View view) {
+    	Intent intent = new Intent(getApplicationContext(), Contacts.class);
+    	startActivity(intent);
+    }
  
-    @Override
-    public void onStart() {
+    @Override 
+    public void onStart() { 
         super.onStart();
     }
  
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
+        try {
+        	Log.d("FITTE", "Clicking Disconnect");
+            googleConnection.disconnect();
+            googleTask.cancel(true);
+            Log.d("onDestroy", "Google task canceled");
+		} catch (Exception e) {
+			Log.d("onDestroy", "Google task already canceled");
+		}
+        try {
+            facebookConnection.disconnect();
+            facebookTask.cancel(true);
+            Log.d("onDestroy", "Facebook task canceled");
+		} catch (Exception e) {
+			Log.d("onDestroy", "Facebook task already canceled");
+		}
+        try {
+            httpTask.cancel(true);
+            Log.d("onDestroy", "HTTP task canceled");
+		} catch (Exception e) { 
+			Log.d("onDestroy", "HTTP task already canceled");
+		}
+    } 
 
 }

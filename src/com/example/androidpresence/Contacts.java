@@ -1,40 +1,153 @@
 package com.example.androidpresence;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import com.example.androidpresence.R;
-import com.example.androidpresence.adapter.ExpandableListAdapter;
+import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.RosterListener;
+import org.jivesoftware.smack.SmackAndroid;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.packet.Presence;
 
-import android.net.sip.SipProfile;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
+import com.example.androidpresence.adapter.ExpandableListAdapter;
+
+
+
+public class Contacts extends Activity {
+	
+	private ExpandableListAdapter listAdapter;
+	private ExpandableListView expListView;
+	private ArrayList<String> listContactNames;
+	private HashMap<String, ArrayList<String>> listContactInformation;
+	//private ArrayList<Contact> listOfContacts;
+	private Context context;
+	private static boolean contactsHaveBeenInitialized = false;
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	    setContentView(R.layout.contacts);
+	    context = this;
+	    // get the listview
+        expListView = (ExpandableListView) findViewById(R.id.expandableList);
+ 
+        //if (!contactsHaveBeenInitialized) {
+            //listOfContacts = MainActivity.listOfContacts;
+        //    contactsHaveBeenInitialized = true;
+        //}
+
+        Log.d("OnCreate", "hasFinishedInit");
+        // preparing list data
+
+        Log.d("OnCreate", "Established a new google thread");
+        
+        
+        
+        
+        
+         prepareListData();
+	     listAdapter = new ExpandableListAdapter(context, listContactNames, listContactInformation);
+	     // setting list adapter
+	     expListView.setAdapter(listAdapter);  
+	     Log.d("OnCreate", "hasRunAsynThread");
+	     
+	     /*Timer timer = new Timer();
+	        timer.schedule(new TimerTask() {
+	        	@Override
+	        	  public void run() {
+	        	     //prepareListData();
+	        	      
+	        	     Log.d("UPDATE", "Should update");
+	        	     listAdapter.update(listContactNames, listContactInformation);
+	        	     listAdapter.notifyDataSetChanged();
+	        	  }
+	        }, 5000);  */
+	}
+	  
+	public void refresh(View view) {
+		onRestart();
+	} 
+	
+	protected void onRestart() {
+		super.onRestart();
+		Intent i = new Intent(this, Contacts.class);
+		startActivity(i);
+		finish();
+	}
+	private void prepareListData() {
+		Log.d("OnCreate", "InsidePrepareListData");
+		listContactNames = new ArrayList<String>();
+		listContactInformation = new HashMap<String, ArrayList<String>>();
+		
+		//ArrayList<Contact> contacts = MainActivity.listOfContacts;
+		for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
+			Contact contact = Global.listOfGlobalContacts.get(i);
+			listContactNames.add(contact.contactName);
+			
+			String gmail = contact.getGmail() +" - "+ contact.getGmailPresence();
+			String facebook = contact.getFacebookUserName() +" - "+ contact.getFacebookPresence();
+			Log.d("DEBUG",""+ contact.getGmailPresence());
+			ArrayList<String> phoneNumbers = contact.getPhoneNumbers();
+			
+			ArrayList<String> finalList = new ArrayList<String>();
+			
+			finalList.add(gmail);
+			finalList.add(facebook);
+			//finalList.addAll(phoneNumbers);
+			
+			String s = ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS;
+			Log.d("sip", s);
+			
+			listContactInformation.put(listContactNames.get(i), finalList);
+		}
+	}
+	
+	
+	
+	
+	@Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+	
+}
+/*
 public class Contacts extends Fragment {
 	
 	
-	// Expandable list
-		private ExpandableListAdapter listAdapter;
-	    private ExpandableListView expListView;
-	    private ArrayList<String> listContactNames;
-	    private HashMap<String, ArrayList<String>> listContactInformation;
+		// Expandable list
+		public static ExpandableListAdapter listAdapter;
+	    public static ExpandableListView expListView;
+	    public static ArrayList<String> listContactNames;
+	    public static HashMap<String, ArrayList<String>> listContactInformation;
+	    public static View rootview;
 	    
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
 		
-        View rootView = inflater.inflate(R.layout.contacts, container, false);
+        rootview = inflater.inflate(R.layout.contacts, container, false);
          
-        
         // get the listview
-        expListView = (ExpandableListView) rootView.findViewById(R.id.expandableList);
+        expListView = (ExpandableListView) rootview.findViewById(R.id.expandableList);
  
         
         // preparing list data
@@ -46,29 +159,39 @@ public class Contacts extends Fragment {
         // setting list adapter
         expListView.setAdapter(listAdapter);
         
-        return rootView;
+        return rootview;
     }
 	
-	private void prepareListData() {
+	public static ExpandableListView getExpView () {
+		return expListView;
+	}
+	
+	public static View getRootView() {
+		return rootview;
+	}
+	
+	public static void refreshList() {
+		prepareListData();
+		listAdapter.notifyDataSetChanged();
+	}
+	
+	public static void prepareListData() {
 		
 		listContactNames = new ArrayList<String>();
 		listContactInformation = new HashMap<String, ArrayList<String>>();
-		ArrayList<String> test = new ArrayList<String>();
-		test.add("hei");
-		test.add("på");
-		test.add("deg");
 		
 		ArrayList<Contact> contacts = MainActivity.listOfContacts;
 		for (int i = 0; i < contacts.size(); i++) {
 			Contact contact = contacts.get(i);
 			listContactNames.add(contact.contactName);
 			
-			ArrayList<String> emails = contact.getEmails();
+			String gmail = contact.getGmail() +", Status: "+ contact.getGmailPresence();
+			Log.d("DEBUG",""+ contact.getGmailPresence());
 			ArrayList<String> phoneNumbers = contact.getPhoneNumbers();
 			
 			ArrayList<String> finalList = new ArrayList<String>();
 			
-			finalList.addAll(emails);
+			finalList.add(gmail);
 			finalList.addAll(phoneNumbers);
 			
 			String s = ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS;
@@ -76,6 +199,8 @@ public class Contacts extends Fragment {
 			
 			listContactInformation.put(listContactNames.get(i), finalList);
 		}
+		
+		
 		
         
  /*
@@ -112,7 +237,7 @@ public class Contacts extends Fragment {
         listContactInformation.put(listContactNames.get(0), top250); // Header, Child data
         listContactInformation.put(listContactNames.get(1), nowShowing);
         listContactInformation.put(listContactNames.get(2), comingSoon);*/
-    }
+    
 	
 	/*
 	private TextView username = null;
@@ -205,8 +330,9 @@ public class Contacts extends Fragment {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}*/
+	}
 
 
 	
 }
+*/
