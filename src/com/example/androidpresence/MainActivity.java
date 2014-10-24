@@ -25,6 +25,7 @@ import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Presence;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,6 +37,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.sip.SipException;
@@ -48,6 +50,7 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.Profile;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -65,45 +68,58 @@ public class MainActivity extends Activity {
     private String SIPpassword; 
 	private AsyncTask<Void, Void, Void> googleTask;
 	private AsyncTask<Void, Void, Void> facebookTask;
-	public AsyncTask<Void, Void, Void> httpTask;
+	private AsyncTask<Void, Void, Void> hipchatTask;
+	public AsyncTask<Void, Void, Void> getFacebookUserNamesHttpTask;
+	public AsyncTask<Void, Void, Void> getHipchatUserNamesHttpTask;
 	private XMPPConnection googleConnection;
 	private XMPPConnection facebookConnection;
-	public static String pw = "";
-	public static String pw2 = "";
+	private XMPPConnection hipchatConnection;
+	private static TextView gmailAddressTextView;
+	private static TextView facebookAddressTextView;
+	private static TextView hipchatAddressTextView;
     // SIP Variables END
 	
 	//USER INFORMATION
 	public static String userName;
-	Context context;
+	public static Context context;
 	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d("CYCLE","CREATE");
 		super.onCreate(savedInstanceState);
-
 	    setContentView(R.layout.activity_main);
 	    context = this; 
+	    
+	    gmailAddressTextView = (TextView) findViewById(R.id.gmailPresence);
+	    facebookAddressTextView = (TextView) findViewById(R.id.facebookPresence);
+	    hipchatAddressTextView = (TextView) findViewById(R.id.hipchatPresence);
 	    
 	    //initiateSIP();
 	    if (!Global.contactsHaveBeenInit) {
 	        Global.listOfGlobalContacts = new ArrayList<Contact>();
 	        getContacts(); 
-			getOwnProfileInfo();
+			getOwnProfileInfo();  
 			Global.contactsHaveBeenInit = true;
 	    }
-	   
-        googleTask = new GoogleConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
-        facebookTask = new FacebookConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+	    Global.sharedPreferences = getSharedPreferences(Global.myPreferences, Context.MODE_PRIVATE);
+	    if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.gmailAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.gmailPasswordKey, "").length() > 0) {
+	    	gmailAddressTextView.setText(Global.sharedPreferences.getString(Global.gmailAddressKey, ""));
+	    	googleTask = new GoogleConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+	    }
+	    if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.facebookAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.facebookPasswordKey, "").length() > 0) {
+	    	facebookAddressTextView.setText(Global.sharedPreferences.getString(Global.facebookAddressKey, ""));
+	    	facebookTask = new FacebookConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+	    }
+	    if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.hipchatAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.hipchatPasswordKey, "").length() > 0 && Global.sharedPreferences.getString(Global.hipchatAPITokenKey, "").length() > 0) {
+	    	hipchatAddressTextView.setText(Global.sharedPreferences.getString(Global.hipchatAddressKey, ""));
+		    hipchatTask = new HipchatConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+	    }
 	}
-	 
 	
-	
-	private class HTTPConnectionAction extends AsyncTask<Void,Void,Void> {
+	private class GetFacebookUserNamesHTTPAction extends AsyncTask<Void,Void,Void> {
 		@Override
-		protected Void doInBackground(Void... params) { 
-	    	//ArrayList<String> mongo = new ArrayList<String>();
-	    	//mongo.add("simon.hordvik");
-	    	//mongo.add("oeseth");
+		protected Void doInBackground(Void... params) {  
 	    	for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
 	    		if (Global.listOfGlobalContacts.get(i).getFacebookUserName() == null) continue;  //if user doesn't have facebook address, skip
 	    		StringBuilder builder = new StringBuilder();
@@ -141,6 +157,60 @@ public class MainActivity extends Activity {
 			return null;
 		}
 	} 
+	
+	private class GetHipchatUsernamesHTTPAction extends AsyncTask<Void,Void,Void> {
+		@Override
+		protected Void doInBackground(Void... params) {  
+			StringBuilder builder = new StringBuilder();
+	    	HttpClient client = new DefaultHttpClient();
+    		HttpGet httpGet = new HttpGet("https://api.hipchat.com/v1/users/list?format=json&auth_token="+Global.sharedPreferences.getString(Global.hipchatAPITokenKey, ""));
+	    	try{
+	    		HttpResponse response = client.execute(httpGet);
+	    		StatusLine statusLine = response.getStatusLine();
+	    		int statusCode = statusLine.getStatusCode();
+	    		if(statusCode == 200){
+	    			HttpEntity entity = response.getEntity();
+	    			InputStream content = entity.getContent();
+	    			BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+	    			String line;
+	    			while((line = reader.readLine()) != null){
+	    				builder.append(line);
+	    			}
+	    		} else {
+	    			Log.e(MainActivity.class.toString(),"Failed JSON object");
+	    		}
+	    	}catch(ClientProtocolException e){
+	    		e.printStackTrace();
+	    	} catch (IOException e){
+	    		e.printStackTrace();
+	    	}
+	    	String readJSONUsers = builder.toString();
+	    	try{
+	        	JSONObject jsonObject = new JSONObject(readJSONUsers);
+	        	JSONArray jsonArray = jsonObject.getJSONArray("users");
+	        	for (int y = 0; y < jsonArray.length(); y++) {
+	        		JSONObject jsonObj = jsonArray.getJSONObject(y);
+	        		String email = jsonObj.getString("email");
+	        		for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
+	    	    		String hipchatUsernameOfContact = Global.listOfGlobalContacts.get(i).getHipchatUserName();
+	    	    		if (hipchatUsernameOfContact == null) continue;  //if user doesn't have hipchat address, skip
+	    	    		if (email.equals(hipchatUsernameOfContact)) {
+		        			String contactHipchatJabberId = jsonObj.getString("user_id");
+		        			if (contactHipchatJabberId != null && contactHipchatJabberId.length() > 0) {
+		        				Log.d("Hipchat", "Contact, UserId: "+email+" = "+contactHipchatJabberId);
+		        				Global.listOfGlobalContacts.get(i).setHipchatUserId(contactHipchatJabberId);
+		        			}
+		        			break;
+		        		}
+	    			}
+				}
+	        } catch(Exception e){Log.d("Exception",""+e);}
+	    	this.cancel(true); //This terminates the async thread. Might have to be placed elsewhere..?
+			return null;
+		}
+	}
+	
+	
 	
 	public void initiateSIP() {
 		Log.d("sip", "initiate sip");
@@ -241,7 +311,9 @@ public class MainActivity extends Activity {
 		if (cursor.getCount() > 0) {
 			while (cursor.moveToNext()) { //for every contact
 				String gmail = null;
+				int gmailCounter = 0;
 				String facebookUserName = null;
+				String hipchatUserName = null;
 				ArrayList<String> emails = new ArrayList<String>();
 				ArrayList<String> phoneNumbers = new ArrayList<String>();
 				String contact_id = cursor.getString(cursor.getColumnIndex( _ID ));
@@ -254,9 +326,12 @@ public class MainActivity extends Activity {
 					email = emailCursor.getString(emailCursor.getColumnIndex(DATA));
 					Log.d("contact Email",email);
 					emails.add(email);
-					gmail = email;
+					if ((email.contains("@gmail.com") || email.contains("@public.talk.google.com")) && gmailCounter == 0) { //should the contact have multiple gmail addresses
+						gmail = email;										 //set the first one to be the contact's actual gmail address
+						gmailCounter++;
+					} 
 					Log.d("email", email);
-				}
+				} 
 				emailCursor.close();
 				String imWhere = ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?"; 
 			 	String[] imWhereParams = new String[]{contact_id, 
@@ -274,17 +349,20 @@ public class MainActivity extends Activity {
 				 	Log.d("IMCURSOR", "Name: "+imName+", Type: "+imType+", Service: "+serviceName); 
 				 	if (serviceName != null && serviceName.toLowerCase().equals("facebook")) {
 				 		facebookUserName = imName;
-				 	    //get facebook user id
-				 	    //Facebook fb = new Session//Facebook("912136795486691");
+				 	}
+				 	else if (serviceName != null && serviceName.toLowerCase().equals("hipchat")) {
+				 		Log.d("Hipchat", "Has hipchat account: "+imName);
+				 		hipchatUserName = imName;
 				 	}
 			 	} 
 			 	imCursor.close(); 
-				Contact contact = new Contact(name,emails, phoneNumbers, gmail, facebookUserName);
+				Contact contact = new Contact(name,emails, phoneNumbers, gmail, facebookUserName, hipchatUserName);
 				Global.listOfGlobalContacts.add(contact);
 			}
 			cursor.close();
 		}	
-		httpTask = new HTTPConnectionAction().execute(); //run async thead that retrieves the contact's respective facebook ids
+		getFacebookUserNamesHttpTask = new GetFacebookUserNamesHTTPAction().execute(); //run async thead that retrieves the contact's respective facebook ids
+		getHipchatUserNamesHttpTask = new GetHipchatUsernamesHTTPAction().execute();
 	}
 	
 	public void getOwnProfileInfo() {
@@ -360,13 +438,11 @@ public class MainActivity extends Activity {
 			Cursor cursor2 = getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder);
 			if (cursor2.moveToFirst()) {
 				String s = cursor2.getString(2);
-				Log.d("MONGO",s);
 			}
 			
 			
 	} 
 	 
-	
 	
 	private class GoogleConnectionAction extends AsyncTask<Void,Void,Void> {
 
@@ -378,15 +454,15 @@ public class MainActivity extends Activity {
 		     googleConnection = new XMPPConnection(config); 
 		        try   
 		        {
-		        	Log.d("OnCreate", "ConnectionAttempt");
+		        	Log.d("OnCreate", "ConnectionAttempt"); 
 		            googleConnection.connect();		 										//Establish connection
-		            Log.d("SUCCSEESSSSS", "JADA"); 
+		            Log.d("SUCCSEESSSSS", "JADA");  
 		            try {
-			            googleConnection.login("simon.hordvik@gmail.com", pw);		//Login
-			            Log.d("Login", "success");			         
+			            googleConnection.login(Global.sharedPreferences.getString(Global.gmailAddressKey, ""), Global.sharedPreferences.getString(Global.gmailPasswordKey, ""));		//Login
+			            Log.d("Login", "success");	
 			            //ATTEMPT TO GET ROSTER OF USERS THAT YOU CHAT WITH AND THEIR STATUSES
 			            Roster roster = googleConnection.getRoster();
-			            
+			             
 			            roster.addRosterListener(new RosterListener() { 
 							
 							@Override
@@ -403,7 +479,7 @@ public class MainActivity extends Activity {
 									if (gmailAddress.toLowerCase().equals(Global.listOfGlobalContacts.get(i).emails.get(0))) {
 										Log.d("MATCHING!!!",gmailAddress+" = "+Global.listOfGlobalContacts.get(i).emails.get(0));
 										Global.listOfGlobalContacts.get(i).setGmailPresence(status);
-										Log.d("FITTE", Global.listOfGlobalContacts.get(i).getGmail()+": "+Global.listOfGlobalContacts.get(i).getGmailPresence()+"-- Should be: "+status);
+										Log.d("TEST", Global.listOfGlobalContacts.get(i).getGmail()+": "+Global.listOfGlobalContacts.get(i).getGmailPresence()+"-- Should be: "+status);
 									}
 								}
 								 
@@ -430,6 +506,15 @@ public class MainActivity extends Activity {
 						        view.setAdapter(Contacts.listAdapter);
 						         
 						        Contacts.getRootView();*/
+								
+								if (Global.gmailPresenceHasBeenInit == false) {
+									runOnUiThread(new Runnable() {
+					    				public void run() {
+					    				    Toast.makeText(getApplicationContext(), "Google presence synchronized", Toast.LENGTH_LONG).show();
+					    				    }
+					    			});
+								}
+								Global.gmailPresenceHasBeenInit = true;
 							} 
 							
 							@Override
@@ -481,6 +566,7 @@ public class MainActivity extends Activity {
 						}*/
 					} catch (Exception e) {
 						Log.d("Login", "failed");
+			            //gmailAddressTextView.setText(Global.sharedPreferences.getString(Global.gmailAddressKey, "") + " - failed");
 						this.cancel(true); //attempt to terminate this async thread
 					}
 		        }
@@ -504,11 +590,11 @@ public class MainActivity extends Activity {
 		     facebookConnection = new XMPPConnection(config); 
 		        try   
 		        {
-		        	Log.d("OnCreate", "ConnectionAttempt");
+		        	Log.d("OnCreate", "ConnectionAttempt"); 
 		            facebookConnection.connect();		 										//Establish connection
 		            Log.d("SUCCSEESSSSS-FACEBOOK", "JADA"); 
 		            try {
-			            facebookConnection.login("simon.hordvik@gmail.com", pw2);		//Login
+			            facebookConnection.login(Global.sharedPreferences.getString(Global.facebookAddressKey, ""), Global.sharedPreferences.getString(Global.facebookPasswordKey, ""));		//Login
 			            Log.d("LoginFacebook", "success");			         
 			            //ATTEMPT TO GET ROSTER OF USERS THAT YOU CHAT WITH AND THEIR STATUSES
 			            Roster roster = facebookConnection.getRoster();
@@ -529,9 +615,18 @@ public class MainActivity extends Activity {
 									if (facebookAddress.equals(Global.listOfGlobalContacts.get(i).getFacebookUserId())) {
 										Log.d("MATCHING!!!-face",facebookAddress+" = "+Global.listOfGlobalContacts.get(i).getFacebookUserId()+"--->"+Global.listOfGlobalContacts.get(i).getFacebookUserName());
 										Global.listOfGlobalContacts.get(i).setFacebookPresence(status);
-										Log.d("FITTE_face", Global.listOfGlobalContacts.get(i).getFacebookUserName()+": "+Global.listOfGlobalContacts.get(i).getFacebookPresence()+"-- Should be: "+status);
+										Log.d("TEST_face", Global.listOfGlobalContacts.get(i).getFacebookUserName()+": "+Global.listOfGlobalContacts.get(i).getFacebookPresence()+"-- Should be: "+status);
 									} 
 								}
+								
+								if (Global.facebookPresenceHasBeenInit == false) {
+									runOnUiThread(new Runnable() {
+					    				public void run() {
+					    				    Toast.makeText(getApplicationContext(), "Facebook presence synchronized", Toast.LENGTH_LONG).show();
+					    				    }
+					    			});
+								}
+								Global.facebookPresenceHasBeenInit = true;
 							}  
 							
 							@Override
@@ -566,27 +661,187 @@ public class MainActivity extends Activity {
 		
 	}
 	
+	private class HipchatConnectionAction extends AsyncTask<Void,Void,Void> {
+		@Override
+		protected Void doInBackground(Void... params) {
+			SmackAndroid.init(context);
+			Log.d("Hipchat", "InsideAsyncThread");
+			 ConnectionConfiguration config = new ConnectionConfiguration("chat.hipchat.com", 5222);
+		     hipchatConnection = new XMPPConnection(config); 
+		        try   
+		        { 
+		        	Log.d("Hipchat", "ConnectionAttempt"); 
+		            hipchatConnection.connect();		 										//Establish connection
+		            Log.d("Hipchat", "Success connection"); 
+		            try {
+		            	Log.d("Hipchat", "Try login"); 
+		            	String hipchatUsername = Global.sharedPreferences.getString(Global.hipchatCompanyJabberIdKey, "")+"_"+Global.sharedPreferences.getString(Global.hipchatUserJabberIdKey, "")+"@chat.hipchat.com";
+		            	Log.d("Hipchat", "Username = "+hipchatUsername); 
+		            	hipchatConnection.login(hipchatUsername, Global.sharedPreferences.getString(Global.hipchatPasswordKey, ""));		//Login
+			            Log.d("Hipchat", "Success login");			         
+			            //ATTEMPT TO GET ROSTER OF USERS THAT YOU CHAT WITH AND THEIR STATUSES
+			            Roster roster = hipchatConnection.getRoster();
+			            
+			            roster.addRosterListener(new RosterListener() { 
+							 
+							@Override
+							public void presenceChanged(Presence arg0) {
+								String status = arg0.getType().name();
+								String from = arg0.getFrom();
+								Log.d("Hipchat",from+": "+status);
+								String contactId = from.split("_")[1].split("@")[0];
+								
+								for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
+									if (contactId.equals(Global.listOfGlobalContacts.get(i).getHipchatUserId())) {
+										Log.d("Hipchat","Matching! "+contactId+" = "+Global.listOfGlobalContacts.get(i).getHipchatUserId()+"--->"+Global.listOfGlobalContacts.get(i).getHipchatUserName() + " is now: "+status);
+										Global.listOfGlobalContacts.get(i).setHipchatPresence(status);
+									} 
+								}
+								
+								if (Global.hipchatPresenceHasBeenInit == false) {
+									runOnUiThread(new Runnable() {
+					    				public void run() {
+					    				    Toast.makeText(getApplicationContext(), "HipChat presence synchronized", Toast.LENGTH_LONG).show();
+					    				    }
+					    			});
+								}
+								Global.hipchatPresenceHasBeenInit = true;
+							}  
+							
+							@Override
+							public void entriesUpdated(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+							} 
+							
+							@Override
+							public void entriesDeleted(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+							}
+							
+							@Override 
+							public void entriesAdded(Collection<String> arg0) {
+								// TODO Auto-generated method stub
+							} 
+						});
+			            
+					} catch (Exception e) {
+						Log.d("Hipchat", "Failed login");
+						this.cancel(true); //attempt to terminate this async thread
+					}
+		        }
+		        catch (Exception ex)
+		        {
+		        	Log.d("Hipchat", "Failed connection");
+		        	this.cancel(true); //attempt to terminate this async thread 
+		            hipchatConnection = null; 
+		        }
+			return null;
+		}
+	}
+	
     
     public void editSIP(View view) {
     	Intent intent = new Intent(getApplicationContext(), EditSIP.class);
     	startActivity(intent);
     }
     
+    public void editGmailAccount(View view) {
+    	Intent intent = new Intent(getApplicationContext(), EditGmail.class);
+    	Global.lastActivity = "editGmail";
+    	startActivity(intent);
+    }
+    
+    public void editFacebookAccount(View view) {
+    	Intent intent = new Intent(getApplicationContext(), EditFacebook.class);
+    	Global.lastActivity = "editFacebook";
+    	startActivity(intent);
+    }
+    
+    public void editHipchatAccount(View view) {
+    	Intent intent = new Intent(getApplicationContext(), EditHipchat.class);
+    	Global.lastActivity = "editHipchat";
+    	startActivity(intent);
+    }
+    
     public void getContacts(View view) {
     	Intent intent = new Intent(getApplicationContext(), Contacts.class);
+    	Global.lastActivity = "contacts";
     	startActivity(intent);
     }
  
     @Override 
     public void onStart() { 
+    	Log.d("CYCLE","START");
         super.onStart();
     }
  
     @Override
+    public void onResume() {   //Should the user have edited his/her gmail/facebook/hipchat connection info, terminate current connection and try new connection with potential new connection info
+    	Log.d("CYCLE","RESUME");
+        super.onResume();
+        if (Global.lastActivity.equals("editGmail")) {
+        	Global.lastActivity = "";
+        	Global.gmailPresenceHasBeenInit = false;
+        	try {
+        		googleConnection.disconnect();
+                googleTask.cancel(true);
+                Log.d("onResume", "Terminated GoogleThread");
+                if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.gmailAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.gmailPasswordKey, "").length() > 0) {
+        	    	gmailAddressTextView.setText(Global.sharedPreferences.getString(Global.gmailAddressKey, ""));
+        	    	googleTask = new GoogleConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+        	    }
+    		} catch (Exception e) {
+    			Log.d("onResume", "Could not terminate GoogleThread");  
+    		}
+        }
+        else if (Global.lastActivity.equals("editFacebook")) {
+        	Global.lastActivity = "";
+        	Global.facebookPresenceHasBeenInit = false;
+        	try {
+        		facebookConnection.disconnect();  
+                facebookTask.cancel(true);
+                Log.d("onResume", "Terminated FacebookThread");
+                if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.facebookAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.facebookPasswordKey, "").length() > 0) {
+        	    	facebookAddressTextView.setText(Global.sharedPreferences.getString(Global.facebookAddressKey, ""));
+        	    	facebookTask = new FacebookConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+        	    }
+    		} catch (Exception e) {
+    			Log.d("onResume", "Could not terminate FacebookThread");
+    		}
+        }
+        else if (Global.lastActivity.equals("editHipchat")) {
+        	Global.lastActivity = "";
+        	Global.hipchatPresenceHasBeenInit = false;
+        	try {
+        		hipchatConnection.disconnect();  
+                hipchatTask.cancel(true);
+                Log.d("onResume", "Terminated HipchatThread");
+                if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.hipchatAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.hipchatPasswordKey, "").length() > 0 && Global.sharedPreferences.getString(Global.hipchatAPITokenKey, "").length() > 0) {
+        	    	hipchatAddressTextView.setText(Global.sharedPreferences.getString(Global.hipchatAddressKey, ""));
+        	    	hipchatTask = new HipchatConnectionAction().execute(); //EXECUTE GOOGLE PRESENCE BACKGROUND THREAD 
+        	    }
+    		} catch (Exception e) {
+    			Log.d("onResume", "Could not terminate HipchatkThread");
+    		}
+        }
+        else if (Global.lastActivity.equals("contacts")) {
+        	Global.lastActivity = "";
+        	//do nothing	
+        }
+    }
+    
+    @Override
+    public void onPause() {
+    	Log.d("CYCLE","PAUSE");
+        super.onPause();
+    }
+    
+    @Override
     public void onDestroy() {
+    	Log.d("CYCLE","DESTROY");
         super.onDestroy();
         try {
-        	Log.d("FITTE", "Clicking Disconnect");
+        	Log.d("TEST", "Clicking Disconnect");
             googleConnection.disconnect();
             googleTask.cancel(true);
             Log.d("onDestroy", "Google task canceled");
@@ -597,14 +852,27 @@ public class MainActivity extends Activity {
             facebookConnection.disconnect();
             facebookTask.cancel(true);
             Log.d("onDestroy", "Facebook task canceled");
-		} catch (Exception e) {
+		} catch (Exception e) { 
 			Log.d("onDestroy", "Facebook task already canceled");
 		}
         try {
-            httpTask.cancel(true);
-            Log.d("onDestroy", "HTTP task canceled");
+            hipchatConnection.disconnect();
+            hipchatTask.cancel(true);
+            Log.d("onDestroy", "Hipchat task canceled");
 		} catch (Exception e) { 
-			Log.d("onDestroy", "HTTP task already canceled");
+			Log.d("onDestroy", "Hipchat task already canceled");
+		}
+        try {
+            getFacebookUserNamesHttpTask.cancel(true);
+            Log.d("onDestroy", "Facebook getUsernames HTTP task canceled");
+		} catch (Exception e) { 
+			Log.d("onDestroy", "Facebook getUsernames HTTP task already canceled");
+		}
+        try {
+            getHipchatUserNamesHttpTask.cancel(true);
+            Log.d("onDestroy", "Hipchat getUsernames HTTP task canceled");
+		} catch (Exception e) { 
+			Log.d("onDestroy", "Hipchat getUsernames HTTP task already canceled");
 		}
     } 
 

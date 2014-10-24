@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#cccccc"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:textSize="20dp"
+            android:text="Gmail Address" />
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <EditText
+	        android:id="@+id/gmailAddress"
+	        android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+	        android:ems="10" >
+		<requestFocus />
+	    </EditText>
+
+    </LinearLayout>
+    
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#cccccc"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:textSize="20dp"
+            android:text="Password" />
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <EditText
+	        android:id="@+id/gmailPassword"
+	        android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+	        android:ems="10"
+	        android:inputType="textPassword"  >
+	    </EditText>
+
+    </LinearLayout>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/gmailSave"
+            android:layout_marginTop="10dp"
+            android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+		    android:background="#66CCFF"
+            android:text="Save" />
+
+    </LinearLayout>
+    
+     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical" >
+
+         <TextView
+             android:id="@+id/sipLoading"
+             android:layout_width="fill_parent" 
+		    android:layout_height="fill_parent" 
+		    android:gravity="center"
+             android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    </LinearLayout>
+
+
+</LinearLayout>

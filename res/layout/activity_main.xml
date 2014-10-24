@@ -22,20 +22,23 @@
         <Button
             android:id="@+id/gmailBtn"
             android:layout_width="fill_parent"
-            android:layout_height="80dp"
+            android:layout_height="wrap_content"
+            android:onClick="editGmailAccount"
             android:text="Gmail" />
+
         </LinearLayout>
      <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#f4f4f4" >   
+
         <TextView
             android:id="@+id/gmailPresence"
             android:layout_width="fill_parent"
-            android:layout_height="80dp"
-            android:text="Gmail"
-            android:gravity="center" />
+            android:layout_height="45dp"
+            android:gravity="center"
+            android:text="Gmail" />
 
     </LinearLayout>
     
@@ -49,7 +52,8 @@
         <Button
             android:id="@+id/fbBtn"
             android:layout_width="fill_parent"
-            android:layout_height="80dp"
+            android:layout_height="wrap_content"
+            android:onClick="editFacebookAccount"
             android:text="Facebook" />
         </LinearLayout>
      <LinearLayout
@@ -57,12 +61,40 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#f4f4f4" >   
+
         <TextView
-            android:id="@+id/fbPresence"
+            android:id="@+id/facebookPresence"
             android:layout_width="fill_parent"
-            android:layout_height="80dp"
-            android:text="Facebook"
-            android:gravity="center" />
+            android:layout_height="54dp"
+            android:gravity="center"
+            android:text="Facebook" />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#f4f4f4" >
+
+        <Button
+            android:id="@+id/hipchatBtn"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:onClick="editHipchatAccount"
+            android:text="HipChat" />
+        </LinearLayout>
+     <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#f4f4f4" >   
+
+        <TextView
+            android:id="@+id/hipchatPresence"
+            android:layout_width="fill_parent"
+            android:layout_height="63dp"
+            android:gravity="center"
+            android:text="HipChat" />
 
     </LinearLayout>
  

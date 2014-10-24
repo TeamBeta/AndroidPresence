@@ -5,6 +5,8 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="app_id">912136795486691</string>
- 
+    <string name="title_activity_edit_gmail">EditGmail</string>
+    <string name="title_activity_edit_facebook">EditFacebook</string>
+    <string name="title_activity_edit_hipchat">EditHipchat</string>
 
 </resources>

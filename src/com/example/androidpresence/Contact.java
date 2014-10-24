@@ -10,15 +10,19 @@ public class Contact {
 	ArrayList<String> phoneNumbers;
 	String gmailPresence = "unavailable";
 	String facebookPresence = "unavailable";
+	String hipchatPresence = "unavailable";
 	String facebookUserName;
 	String facebookUserId;
+	String hipchatUserName;
+	String hipchatUserId;
 
-	public Contact(String contactName, ArrayList<String> emails, ArrayList<String> phoneNumbers, String gmail, String facebookUserName) {
+	public Contact(String contactName, ArrayList<String> emails, ArrayList<String> phoneNumbers, String gmail, String facebookUserName, String hipchatUserName) {
 		this.contactName = contactName;
 		this.emails = emails;
 		this.phoneNumbers = phoneNumbers;
 		this.gmail = gmail;
 		this.facebookUserName = facebookUserName;
+		this.hipchatUserName = hipchatUserName;
 	}
 	
 	
@@ -91,6 +95,37 @@ public class Contact {
 	public String getFacebookUserId() {
 		return this.facebookUserId;
 	}
+
+
+	public String getHipchatUserName() {
+		return hipchatUserName;
+	}
+
+
+	public void setHipchatUserName(String hipchatUserName) {
+		this.hipchatUserName = hipchatUserName;
+	}
+
+
+	public String getHipchatUserId() {
+		return hipchatUserId;
+	}
+
+
+	public void setHipchatUserId(String hipchatUserId) {
+		this.hipchatUserId = hipchatUserId;
+	}
+
+
+	public String getHipchatPresence() {
+		return hipchatPresence;
+	}
+
+
+	public void setHipchatPresence(String hipchatPresence) {
+		this.hipchatPresence = hipchatPresence;
+	}
+	
 	
 	
 	
