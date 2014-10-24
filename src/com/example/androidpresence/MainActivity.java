@@ -102,6 +102,8 @@ public class MainActivity extends Activity {
 			getOwnProfileInfo();  
 			Global.contactsHaveBeenInit = true;
 	    }
+	    
+	    
 	    Global.sharedPreferences = getSharedPreferences(Global.myPreferences, Context.MODE_PRIVATE);
 	    if (Global.sharedPreferences != null && Global.sharedPreferences.getString(Global.gmailAddressKey, "").length() > 0 && Global.sharedPreferences.getString(Global.gmailPasswordKey, "").length() > 0) {
 	    	gmailAddressTextView.setText(Global.sharedPreferences.getString(Global.gmailAddressKey, ""));

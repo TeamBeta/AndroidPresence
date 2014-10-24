@@ -37,6 +37,7 @@ public class Contacts extends Activity {
 	private ArrayList<String> listContactNames;
 	private HashMap<String, ArrayList<String>> listContactInformation;
 	private HashMap<String, ArrayList<String>> listContactTypes;
+	private HashMap<String, ArrayList<String>> listContactPresence;
 	//private ArrayList<Contact> listOfContacts;
 	private Context context;
 	private static boolean contactsHaveBeenInitialized = false;
@@ -64,7 +65,7 @@ public class Contacts extends Activity {
         
         
          prepareListData();
-	     listAdapter = new ExpandableListAdapter(context, listContactNames, listContactInformation,listContactTypes);
+	     listAdapter = new ExpandableListAdapter(context, listContactNames, listContactInformation,listContactTypes, listContactPresence);
 	     // setting list adapter
 	     expListView.setAdapter(listAdapter);  
 	     Log.d("OnCreate", "hasRunAsynThread");
@@ -97,31 +98,45 @@ public class Contacts extends Activity {
 		listContactNames = new ArrayList<String>();
 		listContactInformation = new HashMap<String, ArrayList<String>>();
 		listContactTypes = new HashMap<String, ArrayList<String>>();
+		listContactPresence = new HashMap<String, ArrayList<String>>();
 		
 		//ArrayList<Contact> contacts = MainActivity.listOfContacts;
 		for (int i = 0; i < Global.listOfGlobalContacts.size(); i++) {
 			Contact contact = Global.listOfGlobalContacts.get(i);
 			listContactNames.add(contact.getContactName());
 			
-			String gmail = contact.getGmail() != null ? contact.getGmail() +" - "+ contact.getGmailPresence() : null;
-			String facebook = contact.getFacebookUserName() != null ? contact.getFacebookUserName() +" - "+ contact.getFacebookPresence() : null;
-			String hipchat = contact.getHipchatUserName() != null ? contact.getHipchatUserName() + " - "+contact.getHipchatPresence() : null;
+			String gmail = contact.getGmail() != null ? contact.getGmail() : null;
+			String gmailPresence = contact.getGmailPresence() != null ? contact.getGmailPresence() : null;
+			String facebook = contact.getFacebookUserName() != null ? contact.getFacebookUserName() : null;
+			String facebookPresence = contact.getFacebookPresence() != null ? contact.getFacebookPresence() : null;
+			String hipchat = contact.getHipchatUserName() != null ? contact.getHipchatUserName() : null;
+			String hipchatPresence = contact.getHipchatPresence() != null ? contact.getHipchatPresence() : null;
 			Log.d("DEBUG",""+ contact.getGmailPresence());
 			
 			ArrayList<String> finalList = new ArrayList<String>();
 			ArrayList<String> finalTypeList = new ArrayList<String>();
+			ArrayList<String> finalPresenceList = new ArrayList<String>();
 			
 			if(gmail != null){
 				finalList.add(gmail);
 				finalTypeList.add("Gmail");
+				if(gmailPresence != null){
+					finalPresenceList.add(gmailPresence);
+				}
 			}
 			if(facebook != null){
 				finalList.add(facebook);
 				finalTypeList.add("facebook");
+				if(facebookPresence != null){
+					finalPresenceList.add(facebookPresence);
+				}
 			}
 			if(hipchat != null){
 				finalList.add(hipchat);
 				finalTypeList.add("hipchat");
+				if(hipchatPresence != null){
+					finalPresenceList.add(hipchatPresence);
+				}
 			}
 			
 			String s = ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS;
@@ -129,6 +144,7 @@ public class Contacts extends Activity {
 			
 			listContactInformation.put(listContactNames.get(i), finalList);
 			listContactTypes.put(listContactNames.get(i), finalTypeList);
+			listContactPresence.put(listContactNames.get(i), finalPresenceList);
 			
 		}
 	}

@@ -16,6 +16,7 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.webkit.WebView.FindListener;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.androidpresence.MainActivity;
@@ -28,14 +29,15 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     // child data in format of header title, child title
     private HashMap<String, ArrayList<String>> _listDataChild;
     private HashMap<String, ArrayList<String>> _listDataChildTypes;
-    private String currentType = null;
+    private HashMap<String, ArrayList<String>> _listDataChildPresence;
  
     public ExpandableListAdapter(Context context, ArrayList<String> listDataHeader,
-            HashMap<String, ArrayList<String>> listContactInformation, HashMap<String, ArrayList<String>> listDataChildTypes) {
+            HashMap<String, ArrayList<String>> listContactInformation, HashMap<String, ArrayList<String>> listDataChildTypes,HashMap<String, ArrayList<String>> listDataChildPresence) {
         this._context = context;
         this._listDataHeader = listDataHeader;
         this._listDataChild = listContactInformation;
         this._listDataChildTypes = listDataChildTypes;
+        this._listDataChildPresence = listDataChildPresence;
     }
  
     @Override
@@ -48,6 +50,12 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     	return this._listDataChildTypes.get(this._listDataHeader.get(groupPosition))
                 .get(childPosititon);
     }
+    
+    public Object getPresence(int groupPosition, int childPosititon) {
+    	return this._listDataChildPresence.get(this._listDataHeader.get(groupPosition))
+                .get(childPosititon);
+    }
+    
     
     public void update(ArrayList<String> _GroupStrings, HashMap<String, ArrayList<String>> _ChildStrings){
     	_listDataHeader =  (ArrayList<String>) _GroupStrings;
@@ -66,6 +74,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     	Log.d("getChildView", "step 1");
         final String childText = (String) getChild(groupPosition, childPosition);
         final String childType = (String) getType(groupPosition, childPosition);
+        final String childPresence = (String) getPresence(groupPosition, childPosition);
  
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) this._context
@@ -78,6 +87,27 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
  
         txtListChild.setText(childText);
         txtListChild.setTag(childType);
+        
+        ImageView icon = (ImageView) convertView.findViewById(R.id.imageView);
+        
+        if(childType.toLowerCase().equalsIgnoreCase("gmail")){
+        	icon.setImageResource(R.drawable.gmail);
+        }
+        else if(childType.toLowerCase().equalsIgnoreCase("facebook")){
+        	icon.setImageResource(R.drawable.facebook);
+        }
+        else if(childType.toLowerCase().equalsIgnoreCase("hipchat")){
+        	icon.setImageResource(R.drawable.hipchat);
+        }
+        
+        ImageView pres = (ImageView) convertView.findViewById(R.id.imageViewPresence);
+        if(childPresence.toLowerCase().equalsIgnoreCase("unavailable")){
+        	pres.setImageResource(R.drawable.reddot);
+        }
+        else if (childPresence.toLowerCase().equalsIgnoreCase("available")){
+        	pres.setImageResource(R.drawable.greendot);
+        }
+        
         
         convertView.setOnTouchListener(new OnTouchListener() {
 			
